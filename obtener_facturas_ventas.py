@@ -20,10 +20,16 @@ nombre_archivo_sin_extension = os.path.splitext(os.path.basename(nombre_archivo)
 nombre_log= 'log_defontana_'+nombre_archivo_sin_extension+'.txt'
 usuario_actual = getpass.getuser()
 # si se cambia el server DEBE cambiarse el nombre
+# si se cambia el server DEBE cambiarse el nombre
 if usuario_actual == 'WIN-869S8VCILTL$': #estoy en el servidor windows server para correr el servicio de python...
+    ruta_archivo = os.path.join("C:\\Program Files\\Oenergy\\APIServiceDefontana", nombre_log)
+else:
+    ruta_archivo = os.path.join("C:\\Program Files\\Oenergy\\APIServiceDefontana", nombre_log)
+
+'''if usuario_actual == 'WIN-869S8VCILTL$': #estoy en el servidor windows server para correr el servicio de python...
         ruta_archivo = os.path.join("C:\\Users\\Administrador\\Desktop",nombre_log)
 else:
-    ruta_archivo = os.path.join("C:\\Users", usuario_actual, "Desktop", nombre_log) 
+    ruta_archivo = os.path.join("C:\\Users", usuario_actual, "Desktop", nombre_log) '''
 # Verificar si el archivo existe, y si no, crearlo
 if not os.path.isfile(ruta_archivo):
     with open(ruta_archivo, 'w'):
