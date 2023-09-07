@@ -8,7 +8,6 @@ import os
 import sys
 import time
 import obtener_facturas_ventas
-from datetime import datetime, timedelta
 
 
 class MyService(win32serviceutil.ServiceFramework):
@@ -36,38 +35,37 @@ class MyService(win32serviceutil.ServiceFramework):
                               (self._svc_name_, ''))
         self.main()
 
+    '''
+    def main(self):
+        #while True: mejorado el día 23-06:
+        while not self.stop_requested:
+
+            detalle_compras.main()
+            detalle_ventas.main()
+            
+            time.sleep(300) #120segundos es cada 2 minutos. #300segundos es cada 5 minutos, #1800seg es media hora #600 seg 10 minutos.
+    '''
+    #27-06 nuevo main.
     def main(self):
         while True:
             if self.stop_requested:
                 break
-
-            # Ejecuta el método run_script_at_intervals con un intervalo de 10 minutos
-            self.run_script_at_intervals(120) #120 es 2 horas.
+            #120segundos es cada 2 minutos. #300segundos es cada 5 minutos, #1800seg es media hora #600 seg 10 minutos.
+            
+            #detalle_compras.main()
+            obtener_facturas_ventas.main()
+            time.sleep(300)  # Espera de N segundos antes de ejecutar el siguiente main
 
             if self.stop_requested:
-                break
-    
-    def execute_script(self, execution_time):
-        # Aquí colocas el código que deseas ejecutar
-        print(f"Ejecutando el script en {execution_time}...")
-        obtener_facturas_ventas.main()
-        
-
-    def run_script_at_intervals(self, interval_minutes):
-        while True:
-            now = datetime.now()
-            next_execution = now + timedelta(minutes=interval_minutes - now.minute % interval_minutes, seconds=-now.second)
-            
-            print(f"Esperando hasta las {next_execution.strftime('%d-%m-%Y %H:%M:%S')} para ejecutar el script...")
-            
-            time_to_wait = (next_execution - now).total_seconds()
-            
-            if time_to_wait > 0:
-                time.sleep(time_to_wait)
-                self.execute_script(next_execution.strftime("%d-%m-%Y %H:%M:%S"))
-            else:
-                self.execute_script(next_execution.strftime("%d-%m-%Y %H:%M:%S"))
-                time.sleep((interval_minutes * 60) - now.second)
+                break           
+          
+               
+            # Espera de 5 minutos (300 segundos) antes de volver a ejecutar ambos main
+            for _ in range(30):
+                if self.stop_requested:
+                    break
+                time.sleep(10)  # Espera de 10 segundos antes de verificar nuevamente si se ha solicitado detener el servicio
+    #27-06 nuevo main..
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:

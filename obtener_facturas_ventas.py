@@ -1479,9 +1479,7 @@ def main():
 
             # actualizar datos de tbl_log
             actualizar_log(cone, ID_LOG_DETA, FCH_INICIO_LECT_GENE, FCH_FIN_LECT_GENE, CANT_LECT_GENE, OK_LECT_GENE, FAIL_LECT_GENE, COMENT_LECT_GENE)
-            
-            cone.commit()
-            cone.close()    
+              
 
             '''print("*****")
             print(id_log)
