@@ -61,9 +61,6 @@ ID_LECTURA_DETA = None
 ID_ESTATUS_DETA = None
 # VARIABLES PARA LOG DETALLE 
 
-
-
-
 ##configuración:
 #log txt:
 ###CAMBIAR NOMBRE ARCHIVO SEGÚN DONDE ESTÉ EJECUTANDO
@@ -148,7 +145,7 @@ def obtener_respuesta(_url, _item_por_pagina, _numero_pagina, _token):
     fecha_5_dias_atras_str = fecha_5_dias_atras.strftime("%Y-%m-%d")
    
     # reemplazar or lectura máxima 5 días atras....
-    #fecha_5_dias_atras_str = "2023-08-18"
+    #fecha_5_dias_atras_str = "2023-08-01"
     
     # Luego, convierte las fechas a cadenas antes de usarlas en la URL
     url = _url.replace(":fch_inicio", fecha_5_dias_atras_str).replace(":fch_fin", fecha_actual_str).replace(":item_por_pagina", _item_por_pagina).replace(":numero_pagina", _numero_pagina)
@@ -464,13 +461,14 @@ def insertar_saleList(_respuesta, _conexion, _id_emp, _token):
 
                     #insertar xml por folio y empresa...
                     try:
-                        xml_b64 = obtener_xml_b64_por_folio(_token,voucherInfoFolio)   
-                        rpta_xml = insertar_xml(_id_emp, voucherInfoFolio, xml_b64, _conexion)
-                        print ("Insertó xml:", rpta_xml)
-                        filas_afectadas_total +=  rpta_xml #AQUI ES CUANDO INSERTO EL REGISTRO ENTERO
+                        if rpta_pdf > 0:
+                            xml_b64 = obtener_xml_b64_por_folio(_token,voucherInfoFolio)   
+                            rpta_xml = insertar_xml(_id_emp, voucherInfoFolio, xml_b64, _conexion)
+                            print ("Insertó xml:", rpta_xml)
+                            filas_afectadas_total +=  rpta_xml #AQUI ES CUANDO INSERTO EL REGISTRO ENTERO
 
-                        if rpta_xml < 0 : #retorna -1 en caso de error...
-                            _conexion.rollback()
+                            if rpta_xml < 0 : #retorna -1 en caso de error...
+                                _conexion.rollback()
                     except Exception as e:
                         _conexion.rollback()
                         print("Fallo la insercion de xml de factura.")     
@@ -639,7 +637,9 @@ def insertar_saleList_2(_respuesta, _conexion, _id_emp, _token):
                 if valor_retorno_detalle == 1:   #inserto xml y pdf SÓLO SI INSERTÉ RECIEN LA FACTURA!                  
                     try:                        
                         b64 = obtener_b64_por_folio(_token,voucherInfoFolio)   
-                        print (b64 )                  
+                        #print (b64 )   
+                        print ("id empresa: ",str(_id_emp))
+                        print ("factura numero: ",str(voucherInfoFolio)  )             
                         rpta_pdf = insertar_pdf(_id_emp, voucherInfoFolio, b64, _conexion)
                         print("Insertó pdf:",rpta_pdf)
                         if rpta_pdf < 0 : #retorna -1 en caso de error...
@@ -816,11 +816,14 @@ def insertar_actualizar_datos_usuario(_respuesta, _conexion):
             # print(id_cliente)
             #_conexion.commit()   
             # Incrementar el valor de filas_afectadas_total por el valor de retorno de la función.
-            print (rubro) 
+            
+            #prueba de datos:
+            ''' print(rubro) 
             print(rut)
             print(rut_sin_dv)     
             print(datos_cliente_actualizados)   
-            print("****")
+            print("****")'''
+           
             if datos_cliente_actualizados > 0:
                 filas_afectadas_total += datos_cliente_actualizados
 
@@ -1000,8 +1003,6 @@ def obtener_lectura_facturas_ventas(_conexion):
         print("ERROR: {}".format(e))
         with open(ruta_archivo, 'a') as archivo:
             archivo.write("Error al Obtener Lecturas desde la base de datos...")
-
-
 
 def obtener_b64_por_folio(_token,_folio): #con el token identifico en qué empresa estoy, con el folio busco el PDF
     url = "https://api.defontana.com/api/Sale/GetPDFDocumentBase64?documentType=FVAELECT&folio={}".format(_folio)
@@ -1244,7 +1245,8 @@ def actualizar_log(_conexion, _id_log, _fch_inicio_lect_log, _fch_fin_lect_log, 
 
 # Insertar en log detalle de base de datos
 
-def insertar_datos_log_detalle_defontana(_conexion, _id_log, _status, _fch_dato_det, _fch_inicio_lect_det, _fch_fin_lect_det, _cant_read, _cant_insert, _id_lectura):
+def insertar_datos_log_detalle_defontana(_conexion, _id_log, _status, _fch_dato_det, _fch_inicio_lect_det, 
+                                         _fch_fin_lect_det, _cant_read, _cant_insert, _id_lectura, _cant_reintentos):
     cursor = _conexion.cursor()
     cursor.callproc("fn_log_detalle_insertar_datos_defontana", [
         _id_log,
@@ -1254,12 +1256,74 @@ def insertar_datos_log_detalle_defontana(_conexion, _id_log, _status, _fch_dato_
         _fch_fin_lect_det,
         _cant_read,
         _cant_insert,
-        _id_lectura
+        _id_lectura,
+        _cant_reintentos
     ])
     _conexion.commit()
     id_log = cursor.fetchone()
     id_log = id_log[0]
 # Fin insertar en log detalle de base de datos
+
+### 
+def formatear_rut(rut):
+    '''# Ejemplo de uso:
+    rut = "76.708.710-1"
+    rut_formateado = formatear_rut(rut)
+    print(rut_formateado)  # Esto imprimirá "76708710"'''
+    # Eliminar puntos y guiones y obtener solo los números y el dígito verificador
+    rut_formateado = ''.join(filter(str.isdigit, rut))
+
+    # Si el rut formateado tiene más de 1 caracter, eliminar el último que es el dígito verificador
+    if len(rut_formateado) > 1:
+        rut_formateado = rut_formateado[:-1]
+
+    return rut_formateado
+
+def obtener_id_cliprov(rut, _conexion):
+    cursor = _conexion.cursor()
+    # Buscar el id_company correspondiente al rut en tbl_clientes_proveedores
+    query = "SELECT id_cliprov FROM tbl_clientes_proveedores WHERE rut_no_dv_cliprov = {}".format(rut)
+    cursor.execute(query)
+    result = cursor.fetchone()
+
+    if result is not None:
+        id_company = result[0]       
+        return id_company        
+    else:
+        return None
+
+    
+def lista_para_tbl_clientes_proveedores_empresas(json_data, id_emp, _conexion):
+    id_tipo_cliprov = 1  #en BD: tbl_tipos_clientes_proveedores: 1 = Cliente, 2 = Proveedor
+    
+    lista_cli_prov_emp = []
+
+    for data_item in json_data:
+        rut = data_item.get("clientFile")  # Obtener el rut del elemento JSON (ESTÁ CON PUNTOS Y GUION)
+        
+        if rut:
+            rut_formateado = formatear_rut(rut) #pasa de rut con puntos guion y dv. A: sin puntos y sin dv.
+            id_cliprov = obtener_id_cliprov(rut_formateado, _conexion)
+
+            
+            if id_cliprov is not None:
+                # Agregar una tupla con los valores a la lista
+                lista_cli_prov_emp.append((id_cliprov, id_emp, id_tipo_cliprov))
+    
+    return lista_cli_prov_emp
+
+def insert_lista_para_tbl_clientes_proveedores_empresas(keys, connection):
+    cursor = connection.cursor()
+    rows_affected = 0
+    for key in keys:
+        cursor.callproc('fn_sii_insertar_cliente_proveedor_empresa', key)
+        result = cursor.fetchone()
+        rows_affected += result[0]
+    connection.commit()
+    cursor.close()
+    return rows_affected  
+
+###
 
 
 def main():
@@ -1268,12 +1332,13 @@ def main():
         OK_LECT_GENE = 0
         FAIL_LECT_GENE = 0
 
-        fch_dato_log = time # fch_dato en tbl_log
+        '''fch_dato_log = time # fch_dato en tbl_log
         cant_lect_log = 0  # cant_lect en tbl_log
         ok_lect_log = 0  # ok_lect en tbl_log
         fail_lect_log = 0  # fail_lect en tbl_log
         coment_lect_log = ""  # coment_lect en tbl_log
-        ### PARA EL LOG
+        ### PARA EL LOG'''
+
         print("Main")
         
         cone = conexion_base_datos()
@@ -1281,11 +1346,11 @@ def main():
 
             ID_ESTATUS_DETA = INICIO_OK
 
-            ID_LOG_DETA = insertar_datos_log(cone) # Insertar datos en tbl_log y devolver su id
+            #ID_LOG_DETA = insertar_datos_log(cone) # Insertar datos en tbl_log y devolver su id
 
-            empresas_endpoint = obtener_lectura_facturas_ventas(cone)
+            #empresas_endpoint = obtener_lectura_facturas_ventas(cone)
 
-            CANT_LECT_GENE = len(empresas_endpoint)
+            #CANT_LECT_GENE = len(empresas_endpoint)
 
             FCH_INICIO_LECT_GENE = datetime.now().strftime("%d-%m-%Y %H:%M:%S") # fch_dato en tbl_log
 
@@ -1294,7 +1359,6 @@ def main():
             fecha_actual = datetime.now().strftime("%d-%m-%Y %H:%M:%S.%f")
             with open(ruta_archivo, 'a') as archivo:
                 archivo.write("\n\n*** {} | Inicio Lectura Facturas de Ventas ***\n".format(fecha_actual))
-                        
 
             #print (servicios_de_empresas_endpoints)
             #obtener_respuesta_get_services
@@ -1302,18 +1366,12 @@ def main():
             #inicio de lecturas...
             endpoints_por_leer = obtener_lectura_facturas_ventas(cone) #endpoint activados de lecturas. #llamada de respuesta de facturas de ventas...
            
-            #fecha_actual = datetime.strptime(fecha_actual_str, "%d-%m-%Y %H:%M:%S.%f")
-
-            fch_cada_10min = fecha_actual
-
-           # if fch_cada_10min.minute % 10 == 0:
-            #    print("ok")
+            CANT_LECT_GENE = len(endpoints_por_leer) #cantidad de endpoints por leer.
+          
+             
+            ID_LOG_DETA = insertar_datos_log(cone)
             
-            #(_id_servicio, _fch_dato,   _conexion):  
-            id_log = fn_insertar_datos_log_inicio(3, fecha_actual, cone)
-            
-            
-            print ("id_log",id_log)
+            print ("id_log",ID_LOG_DETA)
 
             cant_lect = 0 #filas totales
             ok_lect  = 0 #filas insertadas
@@ -1324,7 +1382,9 @@ def main():
             contador = 1
             # referencia a items en respuesta
             for endpoint in endpoints_por_leer:
-                id_lectura = endpoint[0]
+                
+                ID_LECTURA_DETA = endpoint[0]
+                
                 id_emp = endpoint[1]
                 max_reintentos = endpoint[2]
                 url = endpoint[3]
@@ -1332,31 +1392,47 @@ def main():
                 numero_pagina = endpoint[5]
                 token = endpoint[6]
 
-                ID_ESTATUS_DETA = ENDPOINTS_OK 
-                
                 nombre_empresa = obtener_nombre_empresa(cone, id_emp) #nombre según el id de empresa
                 
-                for reintento in range(max_reintentos):        
+                ID_ESTATUS_DETA = ENDPOINTS_OK #LECTURAS DE METODOS A LEER OBTENIDAS        
+                MENSAJE_COMPLETO_GEN = ''
+
+
+
+                for reintento in range(max_reintentos):
+                    flag = None
+
+                    CANT_REINTENTOS_DETA = reintento+1
+
                     FCH_INICIO_LECT_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
 
-                    flag = None
                     respuesta_completa = obtener_respuesta(url, item_por_pagina, numero_pagina, token) 
 
-                    #información de clientes a insertar...
-                    respuesta_info_clientes = obtener_clientes_por_empresa(token)
+                    respuesta_info_clientes = obtener_clientes_por_empresa(token)#información de clientes (comuna por ej.) a insertar...
                     
                     if respuesta_completa.status_code == 200:
+                        
+                        MENSAJE_COMPLETO_GEN = ''
+                        #MENSAJE_COMPLETO_GEN + 'OK:' + "Empresa: "+str(nombre_empresa[0]) + " Id lectura:" + str(ID_LECTURA_DETA) + "\n"  
+
+                        print ("Respuesta Exitosa Código 200 url: ")
+                        print ("Empresa: "+str(nombre_empresa[0]) + " Id lectura: " + str(ID_LECTURA_DETA) + "\n" )
+
+                        with open(ruta_archivo, "a") as archivo:                   
+                            archivo.write( "\nRespuesta Exitosa Código 200 url: "+url)
+                                                    
                         flag = True
                         break 
 
                     if reintento < max_reintentos - 1:
+                        CANT_REINTENTOS_DETA = reintento + 1
                         # Esperar antes del próximo reintento
                         with open(ruta_archivo, "a") as archivo:                   
                             archivo.write("\nLectura fallida intento numero: "+str(reintento+1)+" | Url: "+url)
                             
                         tiempo_espera = 10  # Ejemplo: esperar 10 segundos
                         time.sleep(tiempo_espera)
-                #fin bucle for
+                ##fin bucle intento (de reintento a max reintentos)
 
                                  
                     '''else: #respuesta no dio codigo 200..
@@ -1382,8 +1458,7 @@ def main():
                         '''
                     
                 items_totales = 0
-                if flag:
-                    #fecha_actual = datetime.now().strftime("%d-%m-%Y %H:%M:%S")#strftime("%Y-%m-%d %H:%M:%S")
+                if flag:                    
                     fecha_actual = datetime.now().strftime("%d-%m-%Y %H:%M:%S.%f")
                     #print("Leyendo Empresa:",nombre_empresa[0])
                     items_totales = 0
@@ -1393,10 +1468,37 @@ def main():
                     else : items_totales = 0
                     #print ("Filas Respuesta: ", items_totales) 
                    
-                   #insertar clientes...
+                    
+                    #insertar clientes...
+
+                    #información de clientes a insertar...
+                    #respuesta_info_clientes = obtener_clientes_por_empresa(token)
+
+
                     clientes_insertados_actualizados = 0
                     clientes_insertados_actualizados = insertar_actualizar_datos_usuario(respuesta_info_clientes.json(), cone)
                     print ("Clientes Actualizados o Insertados: ",clientes_insertados_actualizados)
+                    
+                    #tabla rompimiento entre tbl_clientes_proveedores y empresas:
+                    print ("item totales: ",items_totales)
+                   
+                    if items_totales > 0: #si hay al menos un registro, intento insertar a la tabla de rompimiento.-
+                        lista_tbl_clientes_proveedores_empresas = lista_para_tbl_clientes_proveedores_empresas(respuesta_completa.json()['saleList'], id_emp, cone)
+                        
+                        #test de lista:
+                        #print("lista tbl cli prov emp: ", str(lista_tbl_clientes_proveedores_empresas))
+                        #print("\n")
+                        
+                        filas_insertadas_tbl_cli_prov_emp = insert_lista_para_tbl_clientes_proveedores_empresas(lista_tbl_clientes_proveedores_empresas, cone)
+                        
+                        if filas_insertadas_tbl_cli_prov_emp > 1 :
+                            print("Nuevos Clientes en tbl_clientes_proveedores_empresas: "+str(filas_insertadas_tbl_cli_prov_emp))
+                            with open(ruta_archivo, "a") as archivo:                   
+                                archivo.write( "Nuevos Clientes en tbl_clientes_proveedores_empresas: "+str(filas_insertadas_tbl_cli_prov_emp) )                      
+                    
+                    ###fin tabla de rompimiento
+
+
 
                     #metodo 01/08 sin token:
                     #facturas_insertadas = insertar_saleList(respuesta_completa.json(), cone, id_emp)  
@@ -1404,10 +1506,10 @@ def main():
                    
                    
                     #INSERTAR DATOS DE FACTURAS
-                    #facturas_insertadas = insertar_saleList(respuesta_completa.json(), cone, id_emp, token)                  
+                    facturas_insertadas = insertar_saleList(respuesta_completa.json(), cone, id_emp, token)                  
                     
                     #test de retornar un 2 si es que ya existe la factura o el detalle....
-                    facturas_insertadas = insertar_saleList_2(respuesta_completa.json(), cone, id_emp, token)             
+                    #facturas_insertadas = insertar_saleList_2(respuesta_completa.json(), cone, id_emp, token)             
                    
                    
                    
@@ -1415,9 +1517,9 @@ def main():
                     mensaje = respuesta_completa.json()['message']
 
                     #suma de totales de log registro..
-                    cant_lect += items_totales
-                    ok_lect += facturas_insertadas #cantidad de facturas insertadas
-                    fail_lect = 0
+                    #CANT_READ_DETA += items_totales
+                    #CANT_INSERT_DETA += facturas_insertadas #cantidad de facturas insertadas
+                    #fail_lect = 0
 
                     ##aqui inserto el detalle del log.
                     #detalle_log = fn_insertar_datos_log_detalle(id_log, _id_estatus, _fch_dato, _fch_inicio_lect, _fch_fin_lect, _cant_read, _cant_insert, _conexion)
@@ -1432,34 +1534,54 @@ def main():
                     CANT_INSERT_DETA = facturas_insertadas
                     FCH_DATO_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
                     FCH_FIN_LECT_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-                    ID_ESTATUS_DETA = RESPUESTA_OK 
+                    #ID_ESTATUS_DETA = RESPUESTA_OK 
+                    ID_ESTATUS_DETA = FIN_OK
+                    
+                    print ("CANT_READ_DETA ", str(items_totales))
+                    print ("CANT_INSERT_DETA ", str(facturas_insertadas))
 
 
                     #INSERCIÓN EN LOG DE DETALLE:
-                    insertar_datos_log_detalle_defontana(cone, ID_LOG_DETA, ID_ESTATUS_DETA, FCH_DATO_DETA, FCH_INICIO_LECT_DETA, FCH_FIN_LECT_DETA, CANT_READ_DETA, CANT_INSERT_DETA, ID_LECTURA_DETA)
+                    '''print ("id log det: "+str(ID_LOG_DETA))
+                    print ("id estatus det: "+str(ID_ESTATUS_DETA))
+                    print ("FCH_DATO_DETA: "+str(FCH_DATO_DETA))
+
+                    print ("FCH_INICIO_LECT_DETA: "+str(FCH_INICIO_LECT_DETA))
+                    print ("FCH_FIN_LECT_DETA: "+str(FCH_FIN_LECT_DETA))
+                    print ("CANT_READ_DETA: "+str(CANT_READ_DETA))
+                    print ("CANT_INSERT_DETA: "+str(CANT_INSERT_DETA))
+                    print ("ID_LECTURA_DETA: "+str(ID_LECTURA_DETA))
+                    print ("CANT_REINTENTOS_DETA: "+str(CANT_REINTENTOS_DETA))'''
                     
+
+                    insert_log_detalle_ok = insertar_datos_log_detalle_defontana(cone, ID_LOG_DETA, ID_ESTATUS_DETA, FCH_DATO_DETA, FCH_INICIO_LECT_DETA, FCH_FIN_LECT_DETA, CANT_READ_DETA, CANT_INSERT_DETA, ID_LECTURA_DETA, CANT_REINTENTOS_DETA )
+                    print ("insert log det ok: ", str(insert_log_detalle_ok))
                     OK_LECT_GENE += 1
+                    print ("*****")
 
 
                 else: #respuesta no fue status code 200
+                    
+                    MENSAJE_COMPLETO_GEN = 'Error'
+
                     print("Error en respuesta..") #romper la actulizacion lectura.
                     # Fecha actual
-                    fecha_actual_str = datetime.now().strftime("%d-%m-%Y %H:%M:%S")    
+                    '''fecha_actual_str = datetime.now().strftime("%d-%m-%Y %H:%M:%S")    
 
                     ventas_insertadas = 0
-                    filas_afectadas = 0
+                    filas_afectadas = 0'''
 
                     FCH_DATO_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
                     FCH_FIN_LECT_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
                     CANT_READ_DETA = 0
                     CANT_INSERT_DETA = 0
                     
-                    #ID_ESTATUS_DETA = RESPUESTA_FAIL
-                    ID_ESTATUS_DETA = RESPUESTA_ALERT #al menos una respuesta entró en error.
+                    ID_ESTATUS_DETA = RESPUESTA_FAIL
+                    #ID_ESTATUS_DETA = RESPUESTA_ALERT #al menos una respuesta entró en error.
 
                     #INSERCIÓN BD tabla tbl_log_detalle_sii
-                    insertar_datos_log_detalle_defontana(cone, ID_LOG_DETA, ID_ESTATUS_DETA, FCH_DATO_DETA, FCH_INICIO_LECT_DETA, FCH_FIN_LECT_DETA, CANT_READ_DETA, CANT_INSERT_DETA, ID_LECTURA_DETA)
-                    
+                    insert_log_det_fail = insertar_datos_log_detalle_defontana(cone, ID_LOG_DETA, ID_ESTATUS_DETA, FCH_DATO_DETA, FCH_INICIO_LECT_DETA, FCH_FIN_LECT_DETA, CANT_READ_DETA, CANT_INSERT_DETA, ID_LECTURA_DETA, CANT_REINTENTOS_DETA)
+                    print ("insert log det fail: ",str(insert_log_det_fail))
                     FAIL_LECT_GENE += 1
 
 
@@ -1470,10 +1592,12 @@ def main():
             # Fecha actual
             fecha_actual_str = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
 
+            COMENT_LECT_GENE = MENSAJE_COMPLETO_GEN
+
             if FAIL_LECT_GENE == CANT_LECT_GENE:
                 COMENT_LECT_GENE = "API CON FALLA TOTAL"
-            else:
-                COMENT_LECT_GENE = "TERMINADO OK"
+            #else:
+            #    COMENT_LECT_GENE = "TERMINADO OK"
             
             FCH_FIN_LECT_GENE = datetime.now().strftime("%d-%m-%Y %H:%M:%S")  
 
@@ -1503,9 +1627,6 @@ def main():
             '''print (cant_lect)
             print (ok_lect)
             print ( fail_lect)'''
-            
-
-       
 
             with open(ruta_archivo, 'a') as archivo:
                 archivo.write("*** FIN LECTURA FACTURAS VENTAS: {} ***\n\n".format(fecha_actual) )   
