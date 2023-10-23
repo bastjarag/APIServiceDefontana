@@ -1419,7 +1419,7 @@ def main():
                         print ("Empresa: "+str(nombre_empresa[0]) + " Id lectura: " + str(ID_LECTURA_DETA) + "\n" )
 
                         with open(ruta_archivo, "a") as archivo:                   
-                            archivo.write( "\nRespuesta Exitosa Código 200 url: "+url)
+                            archivo.write( "\nRespuesta Exitosa Código 200 url: "+url+"\n")
                                                     
                         flag = True
                         break 
