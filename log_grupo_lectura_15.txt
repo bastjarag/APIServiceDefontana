@@ -1,0 +1,522 @@
+
+--- Registro de lecturas a las 17:34:00.046808 25/10/2023 ---
+Cantidad de Endpoints: 1
+Fecha y hora: 17:34:00.046808 25/10/2023
+Lectura 1:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 17:38:00.041258 25/10/2023 ---
+Cantidad de Endpoints: 1
+Fecha y hora: 17:38:00.041258 25/10/2023
+Lectura 1:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 17:45:00.036971 25/10/2023 ---
+Cantidad de Endpoints: 1
+Fecha y hora: 17:45:00.036971 25/10/2023
+Lectura 1:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 18:00:00.052122 25/10/2023 ---
+Cantidad de Endpoints: 1
+Fecha y hora: 18:00:00.052122 25/10/2023
+Lectura 1:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 18:15:00.038369 25/10/2023 ---
+Cantidad de Endpoints: 1
+Fecha y hora: 18:15:00.038369 25/10/2023
+Lectura 1:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 18:30:00.042932 25/10/2023 ---
+Cantidad de Endpoints: 1
+Fecha y hora: 18:30:00.042932 25/10/2023
+Lectura 1:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 18:45:00.061269 25/10/2023 ---
+Cantidad de Endpoints: 1
+Fecha y hora: 18:45:00.061269 25/10/2023
+Lectura 1:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 12:53:00.027376 26/10/2023 ---
+Cantidad de Endpoints: 1
+Fecha y hora: 12:53:00.027376 26/10/2023
+Lectura 1:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 13:00:00.024528 26/10/2023 ---
+Cantidad de Endpoints: 1
+Fecha y hora: 13:00:00.024528 26/10/2023
+Lectura 1:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 13:03:00.027175 26/10/2023 ---
+Cantidad de Endpoints: 1
+Fecha y hora: 13:03:00.027175 26/10/2023
+Lectura 1:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 13:05:00.042555 26/10/2023 ---
+Cantidad de Endpoints: 1
+Fecha y hora: 13:05:00.042555 26/10/2023
+Lectura 1:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 13:07:00.026623 26/10/2023 ---
+Cantidad de Endpoints: 1
+Fecha y hora: 13:07:00.026623 26/10/2023
+Lectura 1:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 13:08:00.029361 26/10/2023 ---
+Cantidad de Endpoints: 1
+Fecha y hora: 13:08:00.029361 26/10/2023
+Lectura 1:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 13:15:00.024298 26/10/2023 ---
+Cantidad de Endpoints: 1
+Fecha y hora: 13:15:00.024298 26/10/2023
+Lectura 1:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 13:18:00.029018 26/10/2023 ---
+Cantidad de Endpoints: 1
+Fecha y hora: 13:18:00.029018 26/10/2023
+Lectura 1:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 14:32:00.021511 26/10/2023 ---
+Cantidad de Endpoints: 1
+Fecha y hora: 14:32:00.021511 26/10/2023
+Lectura 1:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 14:45:00.026643 26/10/2023 ---
+Cantidad de Endpoints: 1
+Fecha y hora: 14:45:00.026643 26/10/2023
+Lectura 1:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 15:27:00.028415 26/10/2023 ---
+Cantidad de Endpoints: 1
+Fecha y hora: 15:27:00.028415 26/10/2023
+Lectura 1:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 15:30:00.030557 26/10/2023 ---
+Cantidad de Endpoints: 1
+Fecha y hora: 15:30:00.030557 26/10/2023
+Lectura 1:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 15:31:00.028935 26/10/2023 ---
+Cantidad de Endpoints: 1
+Fecha y hora: 15:31:00.028935 26/10/2023
+Lectura 1:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 17:22:00.031138 26/10/2023 ---
+Cantidad de Endpoints: 1
+Fecha y hora: 17:22:00.031138 26/10/2023
+Lectura 1:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 17:30:00.026321 26/10/2023 ---
+Cantidad de Endpoints: 1
+Fecha y hora: 17:30:00.026321 26/10/2023
+Lectura 1:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 17:45:00.046789 26/10/2023 ---
+Cantidad de Endpoints: 1
+Fecha y hora: 17:45:00.046789 26/10/2023
+Lectura 1:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 18:00:00.025813 26/10/2023 ---
+Cantidad de Endpoints: 1
+Fecha y hora: 18:00:00.025813 26/10/2023
+Lectura 1:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 18:12:00.025666 26/10/2023 ---
+Cantidad de Endpoints: 5
+Fecha y hora: 18:12:00.025666 26/10/2023
+Lectura 1:
+	Id Lectura: 15
+	Id Empresa: 7
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+Fecha y hora: 18:12:00.025666 26/10/2023
+Lectura 2:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+Fecha y hora: 18:12:00.025666 26/10/2023
+Lectura 3:
+	Id Lectura: 16
+	Id Empresa: 51
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+Fecha y hora: 18:12:00.025666 26/10/2023
+Lectura 4:
+	Id Lectura: 13
+	Id Empresa: 52
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+Fecha y hora: 18:12:00.025666 26/10/2023
+Lectura 5:
+	Id Lectura: 14
+	Id Empresa: 57
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 18:15:00.036029 26/10/2023 ---
+Cantidad de Endpoints: 5
+Fecha y hora: 18:15:00.036029 26/10/2023
+Lectura 1:
+	Id Lectura: 15
+	Id Empresa: 7
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+Fecha y hora: 18:15:00.036029 26/10/2023
+Lectura 2:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+Fecha y hora: 18:15:00.036029 26/10/2023
+Lectura 3:
+	Id Lectura: 16
+	Id Empresa: 51
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+Fecha y hora: 18:15:00.036029 26/10/2023
+Lectura 4:
+	Id Lectura: 13
+	Id Empresa: 52
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+Fecha y hora: 18:15:00.036029 26/10/2023
+Lectura 5:
+	Id Lectura: 14
+	Id Empresa: 57
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 18:30:00.041682 26/10/2023 ---
+Cantidad de Endpoints: 5
+Fecha y hora: 18:30:00.041682 26/10/2023
+Lectura 1:
+	Id Lectura: 15
+	Id Empresa: 7
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+Fecha y hora: 18:30:00.041682 26/10/2023
+Lectura 2:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+Fecha y hora: 18:30:00.041682 26/10/2023
+Lectura 3:
+	Id Lectura: 16
+	Id Empresa: 51
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+Fecha y hora: 18:30:00.041682 26/10/2023
+Lectura 4:
+	Id Lectura: 13
+	Id Empresa: 52
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+Fecha y hora: 18:30:00.041682 26/10/2023
+Lectura 5:
+	Id Lectura: 14
+	Id Empresa: 57
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 18:45:00.026600 26/10/2023 ---
+Cantidad de Endpoints: 5
+Fecha y hora: 18:45:00.026600 26/10/2023
+Lectura 1:
+	Id Lectura: 15
+	Id Empresa: 7
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+Fecha y hora: 18:45:00.026600 26/10/2023
+Lectura 2:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+Fecha y hora: 18:45:00.026600 26/10/2023
+Lectura 3:
+	Id Lectura: 16
+	Id Empresa: 51
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+Fecha y hora: 18:45:00.026600 26/10/2023
+Lectura 4:
+	Id Lectura: 13
+	Id Empresa: 52
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+Fecha y hora: 18:45:00.026600 26/10/2023
+Lectura 5:
+	Id Lectura: 14
+	Id Empresa: 57
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 19:00:00.027284 26/10/2023 ---
+Cantidad de Endpoints: 5
+Fecha y hora: 19:00:00.027284 26/10/2023
+Lectura 1:
+	Id Lectura: 15
+	Id Empresa: 7
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+Fecha y hora: 19:00:00.027284 26/10/2023
+Lectura 2:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+Fecha y hora: 19:00:00.027284 26/10/2023
+Lectura 3:
+	Id Lectura: 16
+	Id Empresa: 51
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+Fecha y hora: 19:00:00.027284 26/10/2023
+Lectura 4:
+	Id Lectura: 13
+	Id Empresa: 52
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+Fecha y hora: 19:00:00.027284 26/10/2023
+Lectura 5:
+	Id Lectura: 14
+	Id Empresa: 57
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+
+--- Registro de lecturas a las 19:15:00.027394 26/10/2023 ---
+Cantidad de Endpoints: 5
+Fecha y hora: 19:15:00.027394 26/10/2023
+Lectura 1:
+	Id Lectura: 15
+	Id Empresa: 7
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+Fecha y hora: 19:15:00.027394 26/10/2023
+Lectura 2:
+	Id Lectura: 12
+	Id Empresa: 24
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+Fecha y hora: 19:15:00.027394 26/10/2023
+Lectura 3:
+	Id Lectura: 16
+	Id Empresa: 51
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+Fecha y hora: 19:15:00.027394 26/10/2023
+Lectura 4:
+	Id Lectura: 13
+	Id Empresa: 52
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
+Fecha y hora: 19:15:00.027394 26/10/2023
+Lectura 5:
+	Id Lectura: 14
+	Id Empresa: 57
+	Endpoint: get_caf
+	Url: https://api.defontana.com/api/Sale/GetCafSummary?documentIds=33
+	Item por página: 0
+	Max Reintentos: 3
