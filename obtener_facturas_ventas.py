@@ -1346,12 +1346,6 @@ def main():
 
             ID_ESTATUS_DETA = INICIO_OK
 
-            #ID_LOG_DETA = insertar_datos_log(cone) # Insertar datos en tbl_log y devolver su id
-
-            #empresas_endpoint = obtener_lectura_facturas_ventas(cone)
-
-            #CANT_LECT_GENE = len(empresas_endpoint)
-
             FCH_INICIO_LECT_GENE = datetime.now().strftime("%d-%m-%Y %H:%M:%S") # fch_dato en tbl_log
 
             print("Entre al Main con conexión a la bd.")
@@ -1360,8 +1354,6 @@ def main():
             with open(ruta_archivo, 'a') as archivo:
                 archivo.write("\n\n*** {} | Inicio Lectura Facturas de Ventas ***\n".format(fecha_actual))
 
-            #print (servicios_de_empresas_endpoints)
-            #obtener_respuesta_get_services
 
             #inicio de lecturas...
             endpoints_por_leer = obtener_lectura_facturas_ventas(cone) #endpoint activados de lecturas. #llamada de respuesta de facturas de ventas...

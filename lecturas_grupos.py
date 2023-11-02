@@ -105,7 +105,7 @@ def obtener_lecturas_por_grupo(conexion):
 
     return lecturas_por_grupo
 
-###
+### escribe en txt del grupo:
 def escribir_archivo_log(id_grupo_lectura, lecturas):
     #escribo en el log del grupo cada configuracion de lectura.
     log_filename = os.path.join(log_directory, f"log_grupo_lectura_{id_grupo_lectura}.txt")
@@ -127,7 +127,6 @@ def escribir_archivo_log(id_grupo_lectura, lecturas):
                 f"\tItem por página: {lectura['item_por_pagina']}\n"
                 f"\tMax Reintentos: {lectura['max_reintentos']}\n"
             )
-
 
 def manejar_grupo(id_grupo):
     primera_ejecucion = True
@@ -156,8 +155,6 @@ def manejar_grupo(id_grupo):
 def procesar_factura_venta(lectura, ruta_archivo, ID_LOG):
     print ("a")
 
-
-
 def procesar_caf(lectura, ruta_archivo, ID_LOG):
     print ("entre al procesar caf")
     id_lectura = lectura['id_lectura']
@@ -165,7 +162,7 @@ def procesar_caf(lectura, ruta_archivo, ID_LOG):
     url = lectura['url']
     endpoint = lectura['endpoint']
     token = lectura['token']
-
+    
 
     payload = {}
     headers = {
@@ -196,13 +193,50 @@ def procesar_caf(lectura, ruta_archivo, ID_LOG):
                 if resultado == -1:
                     print(f"Error al insertar el item: {new_item}")
 
+            ID_ESTATUS_DETA = INICIO_OK
+
+            FCH_INICIO_LECT_GENE = datetime.now().strftime("%d-%m-%Y %H:%M:%S") # fch_dato en tbl_log
+
+            CANT_LECT_GENE = 1 #hardcodeado, deberia ser if itemcaf 1 a 1.
+
+            ID_LOG_DETA = ID_LOG #ya venia la id log, por ende no deberia volver a calcular.
+            #print ("id_log",ID_LOG_DETA)
+
+            ID_LECTURA_DETA = id_lectura
+
+            ID_ESTATUS_DETA = ENDPOINTS_OK #LECTURAS DE METODOS A LEER OBTENIDAS        
+            MENSAJE_COMPLETO_GEN = ''
+
+            CANT_REINTENTOS_DETA = 0 #hardcodeado, debo mejorarlo.
+            FCH_INICIO_LECT_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
+
+            CANT_READ_DETA = CANT_LECT_GENE #A ?
+            CANT_INSERT_DETA = resultado
+
+            FCH_DATO_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
+            FCH_FIN_LECT_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+            
+            ID_ESTATUS_DETA = FIN_OK
+
+            #print ("CANT_READ_DETA ", str(items_totales))
+            #print ("CANT_INSERT_DETA ", str(facturas_insertadas))
+
+            insert_log_detalle_ok = insertar_datos_log_detalle_defontana(conexion, ID_LOG_DETA, ID_ESTATUS_DETA, FCH_DATO_DETA, FCH_INICIO_LECT_DETA, FCH_FIN_LECT_DETA, CANT_READ_DETA, CANT_INSERT_DETA, ID_LECTURA_DETA, CANT_REINTENTOS_DETA )
+            print ("insert log det ok: ", str(insert_log_detalle_ok))
+            #OK_LECT_GENE += 1     
+            OK_LECT_GENE = 1 #hardcodeado?
+
+            #if FAIL_LECT_GENE == CANT_LECT_GENE:
+            #    COMENT_LECT_GENE = "API CON FALLA TOTAL"
+            FCH_FIN_LECT_GENE = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+            actualizar_log(cone, ID_LOG_DETA, FCH_INICIO_LECT_GENE, FCH_FIN_LECT_GENE, CANT_LECT_GENE, OK_LECT_GENE, FAIL_LECT_GENE, COMENT_LECT_GENE)
+             
+
             conexion.close()
         else:
             print("La respuesta no contiene la clave 'itemsCaf'")
     else:
         print("El código de estado no es 200")
-
-
 
 def insertar_caf_en_bd(conexion, item):
     cursor = conexion.cursor()
@@ -228,19 +262,23 @@ def insertar_caf_en_bd(conexion, item):
     finally:
         cursor.close()
 
+def procesar_lectura(lectura, ruta_archivo):
+#def procesar_lectura(lectura, ruta_archivo)#, ID_LOG):
 
-
-def procesar_lectura(lectura, ruta_archivo, ID_LOG):
-#def procesar_lectura(lectura, ruta_archivo):
+    
+    conexion = connection_database()
 
     tipo_lectura = lectura['endpoint']  # Asumiendo que 'endpoint' contiene la información de tipo de factura
 
     
     if tipo_lectura == "facturas_ventas":        
-        
+        # Inserta un registro en tbl_log y obtén el ID_LOG
+        ID_LOG = insertar_datos_log(conexion)
         procesar_factura_venta(lectura, ruta_archivo, ID_LOG)#print ()
     
     elif tipo_lectura == "get_caf":  
+        # Inserta un registro en tbl_log y obtén el ID_LOG
+        ID_LOG = insertar_datos_log_caf(conexion)
         procesar_caf(lectura, ruta_archivo, ID_LOG)
     
     else:   
@@ -248,8 +286,6 @@ def procesar_lectura(lectura, ruta_archivo, ID_LOG):
 
         with open(ruta_archivo, "a") as archivo:                   
             archivo.write( f"Tipo de lectura desconocido, id_lectura:  {lectura['id_lectura']}")
-
-
 
 def procesar_grupo_obtener_lecturas(id_grupo):
     log_filename = os.path.join(log_directory, f"log_grupo_lectura_{id_grupo}.txt")
@@ -260,10 +296,9 @@ def procesar_grupo_obtener_lecturas(id_grupo):
         conexion = connection_database()
 
         if conexion:
-            # Inserta un registro en tbl_log y obtén el ID_LOG
-            #ID_LOG = insertar_datos_log(conexion)
+            
             #print ("ID LOG "+str(ID_LOG))
-            ID_LOG = 999
+            #ID_LOG = 999
             #revisar en bd para que no arroje -1 never.
             
             lecturas_grupo_actual = obtener_lecturas_grupo_actual(conexion, id_grupo)
@@ -273,7 +308,7 @@ def procesar_grupo_obtener_lecturas(id_grupo):
 
             # Proceso cada lectura y evaluo si es COMPRA o VENTA.
             for lectura in lecturas_grupo_actual:
-                procesar_lectura(lectura, log_filename, ID_LOG)
+                procesar_lectura(lectura, log_filename)#, ID_LOG)
 
     except Exception as e:
         print(f"Error en grupo {id_grupo}: {str(e)}")
@@ -316,7 +351,38 @@ def insertar_datos_log(_conexion):
     return id_log  
 # INSERTAR DATOS EN LOG GENERAL
 
-# Insertar en log detalle de base de datos
+def insertar_datos_log_caf(_conexion):  
+    cursor = _conexion.cursor()
+    
+    FCH_DATO_GENE = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+    
+    ID_SERVICIO_GENE = 4
+    cursor.callproc("fn_log_insertar_datos", [
+        ID_SERVICIO_GENE,
+        FCH_DATO_GENE
+    ])
+    
+    _conexion.commit()
+    id_log = cursor.fetchone()
+    id_log = id_log[0]
+    
+    return id_log  
+
+# Actualizar datos del log en base de datos
+def actualizar_log(_conexion, _id_log, _fch_inicio_lect_log, _fch_fin_lect_log, _cant_lect_log, _ok_lect_log, _fail_lect_log, _coment_lect_log):
+    cursor = _conexion.cursor()
+    cursor.callproc("fn_log_actualizar_datos", [
+        _id_log,
+        _fch_inicio_lect_log,
+        _fch_fin_lect_log,
+        _cant_lect_log,
+        _ok_lect_log,
+        _fail_lect_log,
+        _coment_lect_log
+    ])
+    _conexion.commit()
+    id_log = cursor.fetchone()
+    id_log = id_log[0]
 
 def insertar_datos_log_detalle_defontana(_conexion, _id_log, _status, _fch_dato_det, _fch_inicio_lect_det, 
                                          _fch_fin_lect_det, _cant_read, _cant_insert, _id_lectura, _cant_reintentos):
@@ -337,9 +403,6 @@ def insertar_datos_log_detalle_defontana(_conexion, _id_log, _status, _fch_dato_
     id_log = cursor.fetchone()
     id_log = id_log[0]
 # Fin insertar en log detalle de base de datos
-
-
-
 
 
 # Diccionario global para rastrear hilos activos por grupo
