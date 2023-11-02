@@ -211,7 +211,7 @@ def procesar_caf(lectura, ruta_archivo, ID_LOG):
             FCH_INICIO_LECT_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
 
             CANT_READ_DETA = CANT_LECT_GENE #A ?
-            CANT_INSERT_DETA = resultado
+            CANT_INSERT_DETA = 1#resultado #hardcoeasdosdodo
 
             FCH_DATO_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
             FCH_FIN_LECT_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
@@ -225,11 +225,13 @@ def procesar_caf(lectura, ruta_archivo, ID_LOG):
             print ("insert log det ok: ", str(insert_log_detalle_ok))
             #OK_LECT_GENE += 1     
             OK_LECT_GENE = 1 #hardcodeado?
+            FAIL_LECT_GENE = 0 #HARDCODESADDODDODO
+            COMENT_LECT_GENE = ' '
 
             #if FAIL_LECT_GENE == CANT_LECT_GENE:
             #    COMENT_LECT_GENE = "API CON FALLA TOTAL"
             FCH_FIN_LECT_GENE = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-            actualizar_log(cone, ID_LOG_DETA, FCH_INICIO_LECT_GENE, FCH_FIN_LECT_GENE, CANT_LECT_GENE, OK_LECT_GENE, FAIL_LECT_GENE, COMENT_LECT_GENE)
+            actualizar_log(conexion, ID_LOG_DETA, FCH_INICIO_LECT_GENE, FCH_FIN_LECT_GENE, CANT_LECT_GENE, OK_LECT_GENE, FAIL_LECT_GENE, COMENT_LECT_GENE)
              
 
             conexion.close()
