@@ -180,10 +180,8 @@ def obtener_respuesta(_url, _item_por_pagina, _numero_pagina, _token):
     # Convertir la cadena en un objeto datetime
     fecha_actual = datetime.strptime(fecha_actual_str, "%Y-%m-%d")
     #print(fecha_actual)
-    
     #### test1
-    #fecha_actual_str = "2023-11-17"
-    #fecha_actual_str = "2023-09-30"
+    fecha_actual_str = "2023-10-15"
 
     # Calcular la fecha de 5 días atrás
     fecha_5_dias_atras = fecha_actual - timedelta(days=5)
@@ -194,8 +192,8 @@ def obtener_respuesta(_url, _item_por_pagina, _numero_pagina, _token):
     fecha_5_dias_atras_str = fecha_5_dias_atras.strftime("%Y-%m-%d")
    
     # reemplazar or lectura máxima 5 días atras....
-    #fecha_5_dias_atras_str = "2023-08-01"
-    #fecha_5_dias_atras_str = "2023-09-01"
+    fecha_5_dias_atras_str = "2023-09-01"
+    
 
     # Luego, convierte las fechas a cadenas antes de usarlas en la URL
     url = _url.replace(":fch_inicio", fecha_5_dias_atras_str).replace(":fch_fin", fecha_actual_str).replace(":item_por_pagina", _item_por_pagina).replace(":numero_pagina", _numero_pagina)
@@ -222,8 +220,7 @@ def insertar_saleList(_respuesta, _conexion, _id_emp, _token):
 
         # Si documentType no es 'FVAELECT', continuar con el siguiente registro
         if documentType != 'FVAELECT':
-            print("Documento NO es factura electrónica (FVAELECT)!!!!!!!")
-            print("Es: "+str(documentType))
+            print("Documento NO es factura electrónica!!!!!!!")
             continue
 
         #print(documentType)
@@ -572,6 +569,199 @@ def insertar_saleList(_respuesta, _conexion, _id_emp, _token):
      #factura insertada en bd..      
     return filas_afectadas_total
 
+#factura_existe_en_bd = 0
+
+'''def insertar_saleList_2(_respuesta, _conexion, _id_emp, _token):
+    facturas_existentes_en_bd = 0
+    
+    saleLists = _respuesta['saleList']
+
+    filas_afectadas_total = 0 #facturas insertadas.
+    for saleList in saleLists:
+        
+        documentType = saleList['documentType']
+        #print(documentType)
+        firstFolio = saleList['firstFolio']
+        lastFolio = saleList['lastFolio']
+        status = saleList['status']
+        emissionDate = saleList['emissionDate']
+        dateTime = saleList['dateTime']
+        expirationDate = saleList['expirationDate']
+        
+        # rut a buscar el tbl_clientes_proveedor
+        clientFile = saleList['clientFile']         
+        contactIndex = saleList['contactIndex']
+        paymentCondition = saleList['paymentCondition']
+        sellerFileId = saleList['sellerFileId']
+        billingCoin = saleList['billingCoin']
+        billingRate = saleList['billingRate']
+        shopId = saleList['shopId']
+        priceList = saleList['priceList']
+        giro = saleList['giro']
+        city = saleList['city']
+        district = saleList['district']
+        contact = saleList['contact']
+        
+        # Datos dentro de attachedDocuments en JSON
+        attachedDocumentsDate = None
+        attachedDocumentType = None
+        attachedDocumentName = None
+        attachedDocumentNumber = None
+        attachedDocumentTotal = None
+        attachedDocumentTotalDocumentTypeId = None
+        attachedDocumentFolio = None
+        attachedDocumentsReason = None
+        attachedDocumentsGloss = None
+        attachedDocuments = saleList['attachedDocuments']
+
+        for attachedDocument in attachedDocuments: #info de cada documento.           
+            attachedDocumentsDate = attachedDocument['date']
+            attachedDocumentType = attachedDocument['attachedDocumentType']
+            attachedDocumentName = attachedDocument['attachedDocumentName']
+            attachedDocumentNumber = attachedDocument['attachedDocumentNumber']
+            attachedDocumentTotal = attachedDocument['attachedDocumentTotal']
+            attachedDocumentTotalDocumentTypeId = attachedDocument['documentTypeId']
+            attachedDocumentFolio = attachedDocument['folio']
+            attachedDocumentsReason = attachedDocument['reason']
+            attachedDocumentsGloss = attachedDocument['gloss']
+        
+        gloss = saleList['gloss']
+        affectableTotal = saleList['affectableTotal']
+        exemptTotal = saleList['exemptTotal']
+        taxeCode = saleList['taxeCode']
+        taxeValue = saleList['taxeValue']
+        ventaRecDesGlobal = saleList['ventaRecDesGlobal']
+        total = saleList['total']
+        
+        # Datos dentro de voucherInfo en JSON
+        voucherInfoFolio = None
+        voucherInfoType = None
+        voucherInfo = saleList['voucherInfo'] # json
+
+        for  voucherinfos in voucherInfo:
+            voucherInfoFolio = voucherinfos['folio'] # PK de tbl_datos_defontana_ventas_v2
+            voucherInfoType = voucherinfos['type']
+                     
+        isTransferDocument = saleList['isTransferDocument']
+        timestamp = saleList['timestamp']        
+        
+        # buscar rut cliente en tbl_clientes_proveedores
+        rut_sin_dv = clientFile[:-1].replace(".","").replace("-","") # quitar . - dv
+        dv = clientFile[-1]
+        id_cliente = None
+        
+       
+        ################################
+        ######INSERCIÓN DE DATOS########
+        ################################
+
+
+        id_cliente = insertar_cliprov(clientFile, rut_sin_dv, dv, _conexion) #clientFile es el rut con puntos y con dv con guion 
+        #retorna -1 si hubo error y no intenta insertar factura:   
+        if id_cliente > 0:         
+           #si obtengo la id del cliente insertado o encontrado, intentaré insertar la factura: 
+
+            fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            valor_retorno = insertar_factura_venta(voucherInfoFolio, _id_emp, id_cliente,fecha_actual,documentType,firstFolio,lastFolio,status,emissionDate,dateTime,expirationDate,
+                                                    contactIndex,paymentCondition,sellerFileId,billingCoin,billingRate,shopId,priceList,giro,city,district,contact,
+                                                    attachedDocumentsDate,attachedDocumentType,attachedDocumentName,attachedDocumentNumber,attachedDocumentTotal,
+                                                    attachedDocumentTotalDocumentTypeId,attachedDocumentFolio,attachedDocumentsReason,attachedDocumentsGloss,gloss,affectableTotal,
+                                                    exemptTotal,taxeCode,taxeValue,ventaRecDesGlobal,total,voucherInfoType,isTransferDocument,timestamp, _conexion)
+
+            if valor_retorno == 2: #factura ya existe en bd, sumar a la variable que me cuenta las facturas en bd.
+                facturas_existentes_en_bd = facturas_existentes_en_bd +1                        
+                    
+
+            details = saleList['details'] #items de cada factura...
+
+            #valor_retorno_detalle = 0 #para retornar el valor de detalles insertados, consultado despues...
+
+            if valor_retorno > 0: 
+               
+                for detail in details: #recorro cada detalle de factura..
+                    detailLine = detail['detailLine']
+                    type = detail['type']
+                    code = detail['code']
+                    count = detail['count']
+                    price = detail['price']
+                    isExempt = detail['isExempt']
+                    discountType = detail['discountType']
+                    discountValue = detail['discountValue']
+                    comment = detail['comment']
+                    total = detail['total']
+                    priceList = detail['priceList']                    
+                    analysis = detail['analysis']
+                    accountNumber = detail['infAnalysis']['accountNumber']
+                    businessCenter = detail['infAnalysis']['businessCenter']
+                    classifier01 = detail['infAnalysis']['classifier01']
+                    classifier02 = detail['infAnalysis']['classifier02']
+                    
+                    #inserto cada detalle de factura...
+                    valor_retorno_detalle = insertar_detalle_factura_venta( detailLine,
+                                                                voucherInfoFolio, #ESTE ES EL FOLIO DE LA FACTURA!
+                                                                _id_emp, #id de la empresa (gsd, oym, etc)
+                                                                id_cliente, #id del cliente que está comprando 
+                                                                type,
+                                                                code,
+                                                                count,
+                                                                price,
+                                                                isExempt,
+                                                                discountType,
+                                                                discountValue,
+                                                                comment,
+                                                                total,
+                                                                priceList,
+                                                                analysis,
+                                                                accountNumber,
+                                                                businessCenter,
+                                                                classifier01,
+                                                                classifier02,
+                                                                _conexion)     
+                
+                #fin ciclo para detalle de cada de factura.             
+
+                    
+                #print ("valor_retorno_detalle "+str(valor_retorno_detalle))
+                              
+               
+                if valor_retorno_detalle == 1:   #inserto xml y pdf SÓLO SI INSERTÉ RECIEN LA FACTURA!                  
+                    try:                        
+                        b64 = obtener_b64_por_folio(_token,voucherInfoFolio)   
+                        #print (b64 )   
+                        print ("id empresa: ",str(_id_emp))
+                        print ("factura numero: ",str(voucherInfoFolio)  )             
+                        rpta_pdf = insertar_pdf(_id_emp, voucherInfoFolio, b64, _conexion)
+                        print("Insertó pdf:",rpta_pdf)
+                        if rpta_pdf < 0 : #retorna -1 en caso de error...
+                            _conexion.rollback()
+                    except Exception as e:
+                        _conexion.rollback()
+                        print("Fallo la insercion de pdf factura.")  
+                        #break    
+
+                    #insertar xml por folio y empresa...
+                    try:
+                        xml_b64 = obtener_xml_b64_por_folio(_token,voucherInfoFolio)   
+                        rpta_xml = insertar_xml(_id_emp, voucherInfoFolio, xml_b64, _conexion)
+                        print ("Insertó xml:", rpta_xml)
+                        filas_afectadas_total +=  rpta_xml #AQUI ES CUANDO INSERTO EL REGISTRO ENTERO
+
+                        if rpta_xml < 0 : #retorna -1 en caso de error...
+                            _conexion.rollback()
+                    except Exception as e:
+                        _conexion.rollback()
+                        print("Fallo la insercion de xml de factura.")     
+
+                    _conexion.commit()  #recién insertado el cliente, factura, detalle, pdf y xml HAGO COMMIT, antes no, hago rollback
+        
+    
+   
+    print("Id empresa: ",_id_emp ,"Facturas ya existentes en bd: ",facturas_existentes_en_bd)
+
+     #facturas insertadas en bd..      
+    return filas_afectadas_total
+'''
 
 
 def insertar_cliprov(rut_txt, rut_sin_dv, dv, _conexion):  #buscar e insertar cliente proveedor en la tabla d ela bd...   
@@ -1165,7 +1355,9 @@ def actualizar_log(_conexion, _id_log, _fch_inicio_lect_log, _fch_fin_lect_log, 
     id_log = id_log[0]
 # Fin actualizar datos del log en base de datos
 
+
 # Insertar en log detalle de base de datos
+
 def insertar_datos_log_detalle_defontana(_conexion, _id_log, _status, _fch_dato_det, _fch_inicio_lect_det, 
                                          _fch_fin_lect_det, _cant_read, _cant_insert, _id_lectura, _cant_reintentos):
     cursor = _conexion.cursor()
@@ -1329,7 +1521,6 @@ def main():
                                         archivo.write( "Nuevos Clientes en tbl_clientes_proveedores_empresas: "+str(filas_insertadas_tbl_cli_prov_emp) )                      
                             
                                 #envío el token, porque lo ocupo para el pdf y xml..   
-                                
                                 #INSERTAR DATOS DE FACTURAS
                                 facturas_insertadas = insertar_saleList(respuesta_completa.json(), cone, id_emp, token)   
                                 
@@ -1339,7 +1530,11 @@ def main():
                                 cod_rpta = respuesta_completa.status_code
                                 mensaje = respuesta_completa.json()['message']
 
-                                
+                                with open (ruta_archivo, 'a') as archivo:
+                                    archivo.write("{} | {} | Filas Insertadas: {} | Filas Respuesta: {}  | Código Respuesta {} | {} \n".format(fecha_actual,nombre_empresa[0],facturas_insertadas,items_totales, cod_rpta, mensaje) )   
+                                contador += 1
+                                print("{} | {} | Filas Insertadas: {} | Filas Respuesta: {}  | Código Respuesta {} | {} \n".format(fecha_actual,nombre_empresa[0],facturas_insertadas,items_totales, cod_rpta, mensaje) )   
+                            
 
                                 CANT_READ_DETA = items_totales
                                 CANT_INSERT_DETA = facturas_insertadas
@@ -1348,11 +1543,16 @@ def main():
                                 #ID_ESTATUS_DETA = RESPUESTA_OK 
                                 ID_ESTATUS_DETA = FIN_OK
                                 
+                                print ("CANT_READ_DETA ", str(items_totales))
+                                print ("CANT_INSERT_DETA ", str(facturas_insertadas))
+
+                                insert_log_detalle_ok = insertar_datos_log_detalle_defontana(cone, ID_LOG_DETA, ID_ESTATUS_DETA, FCH_DATO_DETA, FCH_INICIO_LECT_DETA, FCH_FIN_LECT_DETA, CANT_READ_DETA, CANT_INSERT_DETA, ID_LECTURA_DETA, CANT_REINTENTOS_DETA )
+                                print ("insert log det ok: ", str(insert_log_detalle_ok))
                                 OK_LECT_GENE += 1
                                 print ("*****")
 
                                 pass
-                            
+                            ###fin tabla de rompimiento
 
                         else:
                             CANT_REINTENTOS_DETA += 1 #se suma un reintento.
@@ -1372,7 +1572,6 @@ def main():
                             CANT_INSERT_DETA = 0
                             
                             ID_ESTATUS_DETA = RESPUESTA_FAIL
-                            print ("id_status_deta: " + str(ID_ESTATUS_DETA))
                             #ID_ESTATUS_DETA = RESPUESTA_ALERT #al menos una respuesta entró en error.
 
                             #INSERCIÓN BD tabla tbl_log_detalle_sii
@@ -1384,14 +1583,9 @@ def main():
                             print ("insert log det fail: ",str(insert_log_det_fail))
                             FAIL_LECT_GENE += 1
                     
-                    FCH_DATO_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
-                    FCH_FIN_LECT_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
-
                     # Inserción de un único registro de detalle después de procesar todas las páginas
                     insert_log_detalle_ok = insertar_datos_log_detalle_defontana(cone, ID_LOG_DETA, ID_ESTATUS_DETA, FCH_DATO_DETA, FCH_INICIO_LECT_DETA, FCH_FIN_LECT_DETA, total_filas_leidas, total_filas_insertadas, ID_LECTURA_DETA, CANT_REINTENTOS_DETA)
                     print("insert log det ok: ", str(insert_log_detalle_ok))
-
-                             
 
 
                 else :

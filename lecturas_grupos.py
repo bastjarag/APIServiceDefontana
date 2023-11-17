@@ -30,13 +30,21 @@ FIN_FAIL = 11
 #FIN VALORES SEGÚN TABLA de BD.
 
 def connection_database():
-    #database = "API_MOTOR" #bd de pruebas....
+    '''#database = "API_MOTOR" #bd de pruebas....
     database = "API_DATA"
     user = "bjara"
     #host = "172.28.0.1"
     host = '192.168.124.60' #con vpn
     password = "jHxB@sD48*"
+    port = 5432'''
+
+    database = 'OFINANCE'
+    user = 'integrator'
+    host = '192.168.149.20'
+    password = 'aZwY=d@tA79'
     port = 5432
+
+
     
     try:
         conexion = psycopg2.connect(database=database, user=user, host=host, password=password, port=port)
@@ -401,9 +409,22 @@ def insertar_datos_log_detalle_defontana(_conexion, _id_log, _status, _fch_dato_
         _id_lectura,
         _cant_reintentos
     ])
+    '''   print("fn_log_detalle_insertar_datos_defontana datos:")
+        print(_id_log)
+        print(_status)
+        print(_fch_dato_det)
+        print(_fch_inicio_lect_det)
+        print(_fch_fin_lect_det)
+        print(_cant_read)
+        print(_cant_insert)
+        print(_id_lectura)
+        print(_cant_reintentos)'''
+
+
     _conexion.commit()
     id_log = cursor.fetchone()
     id_log = id_log[0]
+    print ("id log de fn_log_detalle_insertar_datos_defontana " +str(id_log))
 # Fin insertar en log detalle de base de datos
 
 
