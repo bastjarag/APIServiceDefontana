@@ -38,10 +38,11 @@ def connection_database():
     password = "jHxB@sD48*"
     port = 5432'''
 
-    database = 'OFINANCE'
-    user = 'integrator'
-    host = '192.168.149.20'
-    password = 'aZwY=d@tA79'
+  
+    database = "OFINANCE"
+    user = "integrator"   
+    host = '192.168.149.20' 
+    password = "aZwY=d@tA79"
     port = 5432
 
 

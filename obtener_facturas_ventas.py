@@ -89,14 +89,12 @@ if not os.path.isfile(ruta_archivo):
 #deprecado.
 '''def conexion_base_datos_old(): 
     
-    # Datos para la conexion
-    #database = "API_MOTOR" #bd de pruebas.........
-    database = "API_DATA"
-    user = "bjara"
-    #host = "172.28.0.1"
-    host = '192.168.124.60' #con vpn
-    password = "jHxB@sD48*"
+    database = "OFINANCE"
+    user = "integrator"   
+    host = '192.168.149.20' 
+    password = "aZwY=d@tA79"
     port = 5432
+    
 
     try:
         validation = psycopg2.connect(database=database,
