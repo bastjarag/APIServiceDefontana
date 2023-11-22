@@ -181,7 +181,7 @@ def obtener_respuesta(_url, _item_por_pagina, _numero_pagina, _token):
     
     #### test1
     #fecha_actual_str = "2023-11-17"
-    #fecha_actual_str = "2023-09-30"
+    fecha_actual_str = "2023-11-16"
 
     # Calcular la fecha de 5 días atrás
     fecha_5_dias_atras = fecha_actual - timedelta(days=5)
@@ -192,7 +192,7 @@ def obtener_respuesta(_url, _item_por_pagina, _numero_pagina, _token):
     fecha_5_dias_atras_str = fecha_5_dias_atras.strftime("%Y-%m-%d")
    
     # reemplazar or lectura máxima 5 días atras....
-    #fecha_5_dias_atras_str = "2023-08-01"
+    fecha_5_dias_atras_str = "2023-08-01"
     #fecha_5_dias_atras_str = "2023-09-01"
 
     # Luego, convierte las fechas a cadenas antes de usarlas en la URL
@@ -909,7 +909,7 @@ def obtener_lectura_facturas_ventas(_conexion):
 def obtener_b64_por_folio(_token,_folio): #con el token identifico en qué empresa estoy, con el folio busco el PDF
     url = "https://api.defontana.com/api/Sale/GetPDFDocumentBase64?documentType=FVAELECT&folio={}".format(_folio)
    
-   #url para fardela:
+   #url para NEW PDF:
    #test1 
     #url = "https://api.defontana.com/api/Sale/GetNEWPDFDocumentBase64?documentType=FVAELECT&folio={}".format(_folio)
     
@@ -934,7 +934,14 @@ def obtener_b64_por_folio(_token,_folio): #con el token identifico en qué empre
         response_data = response.json()
         # Verificar si el "document" está presente y no es null ni una cadena vacía
         if "document" in response_data and response_data["document"]:
+             # Imprimir los valores adicionales
+            print("success:", response_data.get("success"))
+            print("message:", response_data.get("message"))
+            print("exceptionMessage:", response_data.get("exceptionMessage"))
+            
+            
             return response_data["document"]
+            
     
     # Devolver None o una cadena vacía si "document" no está presente, es null o está vacío
     return None
@@ -1293,6 +1300,9 @@ def main():
                 
                 if respuesta_inicial.status_code == 200:
                     MENSAJE_COMPLETO_GEN = ''
+                    
+                    #INICIO DE LECTURA
+                    FCH_DATO_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
 
                     total_items = respuesta_inicial.json()['totalItems']
                     total_paginas = calcular_total_paginas(total_items, int(item_por_pagina))
@@ -1337,11 +1347,18 @@ def main():
                                 cod_rpta = respuesta_completa.status_code
                                 mensaje = respuesta_completa.json()['message']
 
+
+                                with open (ruta_archivo, 'a') as archivo:
+                                    archivo.write("{} | Página {} | {} | Filas Insertadas: {} | Filas Respuesta: {}  | Código Respuesta {} | {} \n".format(fecha_actual,numero_pagina_actual, nombre_empresa[0],facturas_insertadas,items_totales, cod_rpta, mensaje) )   
+                                contador += 1
+                                print("{} | Página {} | {} | Filas Insertadas: {} | Filas Respuesta: {}  | Código Respuesta {} | {} \n".format(fecha_actual, numero_pagina_actual, nombre_empresa[0],facturas_insertadas,items_totales, cod_rpta, mensaje) )   
+                            
+
                                 
 
                                 CANT_READ_DETA = items_totales
                                 CANT_INSERT_DETA = facturas_insertadas
-                                FCH_DATO_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
+                                #FCH_DATO_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
                                 FCH_FIN_LECT_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
                                 #ID_ESTATUS_DETA = RESPUESTA_OK 
                                 ID_ESTATUS_DETA = FIN_OK
@@ -1381,7 +1398,8 @@ def main():
                            
                             print ("insert log det fail: ",str(insert_log_det_fail))
                             FAIL_LECT_GENE += 1
-                    
+                     
+                    ID_ESTATUS_DETA = FIN_OK
                     FCH_DATO_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
                     FCH_FIN_LECT_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
 
