@@ -181,7 +181,7 @@ def obtener_respuesta(_url, _item_por_pagina, _numero_pagina, _token):
     
     #### test1
     #fecha_actual_str = "2023-11-17"
-    fecha_actual_str = "2023-11-16"
+    #fecha_actual_str = "2023-11-16"
 
     # Calcular la fecha de 5 días atrás
     fecha_5_dias_atras = fecha_actual - timedelta(days=5)
@@ -192,7 +192,7 @@ def obtener_respuesta(_url, _item_por_pagina, _numero_pagina, _token):
     fecha_5_dias_atras_str = fecha_5_dias_atras.strftime("%Y-%m-%d")
    
     # reemplazar or lectura máxima 5 días atras....
-    fecha_5_dias_atras_str = "2023-08-01"
+    #fecha_5_dias_atras_str = "2023-08-01"
     #fecha_5_dias_atras_str = "2023-09-01"
 
     # Luego, convierte las fechas a cadenas antes de usarlas en la URL
