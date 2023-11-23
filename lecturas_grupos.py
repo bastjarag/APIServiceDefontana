@@ -252,7 +252,8 @@ def procesar_caf(lectura, ruta_archivo, ID_LOG):
 def insertar_caf_en_bd(conexion, item):
     cursor = conexion.cursor()
     try:
-        result = cursor.callproc("fn_defontana_insertar_caf", [
+        #result = cursor.callproc("fn_defontana_insertar_caf", [
+        result = cursor.callproc("fn_defontana_insertar_o_actualizar_caf", [            
             item['id_emp'],
             item['fch_dato'],
             item['tipoDocumento'],
@@ -266,6 +267,9 @@ def insertar_caf_en_bd(conexion, item):
             item['mensajeError']
         ])
         conexion.commit()
+        print ("Resultado de fn_defontana_insertar_o_actualizar_caf")
+        print (result)
+        print (result[0])
         return result[0]  # Retorna el resultado de la función (1 para éxito, -1 para error)
     except Exception as e:
         print(f"Error al insertar en la base de datos: {str(e)}")
