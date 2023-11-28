@@ -35,6 +35,28 @@ FIN_ALERT = 10
 FIN_FAIL = 11
 #FIN VALORES SEGÚN TABLA de BD.
 
+# VARIABLES PARA LOG GENERAL
+ID_SERVICIO_GENE = 3 #3 ES DEFONTANA
+FCH_DATO_GENE = None
+FCH_INICIO_LECT_GENE = None
+FCH_FIN_LECT_GENE = None
+CANT_LECT_GENE = None
+OK_LECT_GENE = None
+FAIL_LECT_GENE = None
+COMENT_LECT_GENE = None
+# VARIABLES PARA LOG GENERAL
+
+# VARIABLES PARA LOG DETALLE
+ID_LOG_DETA = None
+FCH_DATO_DETA = None
+FCH_INICIO_LECT_DETA = None
+FCH_FIN_LECT_DETA = None
+CANT_READ_DETA = None
+CANT_INSERT_DETA = None
+ID_LECTURA_DETA = None
+ID_ESTATUS_DETA = None
+# VARIABLES PARA LOG DETALLE 
+
 ### new code
 nombre_archivo = os.path.abspath(sys.argv[0])# Obtener el nombre del archivo actual (incluyendo la ruta completa)
 nombre_archivo_sin_extension = os.path.splitext(os.path.basename(nombre_archivo))[0]
@@ -929,7 +951,8 @@ def insertar_xml(_id_emp, _folio, _b64_pdf, _conexion):
         
     return rpta_fn
 
-# INSERTAR DATOS EN LOG GENERAL
+#deprecado? repetido? idk
+'''# INSERTAR DATOS EN LOG GENERAL
 def insertar_datos_log(_conexion):
     cursor = _conexion.cursor()
     FCH_DATO_GENE = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
@@ -960,7 +983,7 @@ def actualizar_log(_conexion, _id_log, _fch_inicio_lect_log, _fch_fin_lect_log, 
     _conexion.commit()
     id_log = cursor.fetchone()
     id_log = id_log[0]
-
+'''
 # Insertar en log detalle de base de datos
 def insertar_datos_log_detalle_defontana(_conexion, _id_log, _status, _fch_dato_det, _fch_inicio_lect_det, 
                                          _fch_fin_lect_det, _cant_read, _cant_insert, _id_lectura, _cant_reintentos):
@@ -979,6 +1002,7 @@ def insertar_datos_log_detalle_defontana(_conexion, _id_log, _status, _fch_dato_
     _conexion.commit()
     id_log = cursor.fetchone()
     id_log = id_log[0]
+
 
 def formatear_rut(rut):
     '''# Ejemplo de uso:
@@ -1051,7 +1075,7 @@ def connection_database():
     try:
         conexion = psycopg2.connect(database=database, user=user, host=host, password=password, port=port)
         #print(f"{datetime.now().strftime('%H:%M:%S %d/%m/%Y')} - Conexión a BD exitosa")
-        print(f"{datetime.now().strftime('%H:%M:%S.%f')[:-3]} {datetime.now().strftime('%d/%m/%Y')} - Conexión a BD exitosa")
+        #print(f"{datetime.now().strftime('%H:%M:%S.%f')[:-3]} {datetime.now().strftime('%d/%m/%Y')} - Conexión a BD exitosa")
         return conexion
     except Exception as e:
         print(f"{datetime.now().strftime('%H:%M:%S.%f')[:-3]} {datetime.now().strftime('%d/%m/%Y')} - Error de conexión a BD: {str(e)}")
@@ -1221,11 +1245,15 @@ def manejar_grupo(id_grupo):
         procesar_grupo_obtener_lecturas(id_grupo,called_execution_time)
         print(f"Ejecutado proceso para el grupo {id_grupo} a las {hora_ejecucion.strftime('%H:%M:%S')}")
 
-def procesar_factura_venta(lectura, ruta_archivo, ID_LOG):
+def procesar_factura_venta(lectura, ruta_archivo, ID_LOG, hora_orquestado):
+        #def procesar_factura_venta(lectura, ruta_archivo, ID_LOG):
     fch_actual = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-    print ("Entre a procesar_factura_venta a las "+fch_actual)
+    #print ("Entre a procesar_factura_venta a las "+fch_actual)
 
     id_lectura = lectura['id_lectura']
+   
+    ID_LECTURA_DETA = id_lectura
+
     id_emp = lectura['id_emp']
     max_reintentos = lectura['max_reintentos']
     url = lectura['url']
@@ -1247,26 +1275,205 @@ def procesar_factura_venta(lectura, ruta_archivo, ID_LOG):
     else:
         
         try:
-            print ("Testeo")
+            fecha_actual = datetime.now().strftime("%d-%m-%Y %H:%M:%S.%f")
+            #print ("Testeo")
 
-            OK_LECT_GENE_ventas = 0
-            FAIL_LECT_GENE_ventas = 0
+            OK_LECT_GENE = 0
+            FAIL_LECT_GENE = 0
 
-            ID_LECTURA_DETA_ventas = id_lectura
+            ID_LECTURA_DETA = id_lectura
 
-            ID_ESTATUS_DETA_ventas = INICIO_OK
+            ID_ESTATUS_DETA = INICIO_OK
 
-            ID_LOG_DETA_ventas = ID_LOG
+            ID_LOG_DETA = ID_LOG
 
-            MENSAJE_COMPLETO_GEN_ventas = 'Ok'
+            MENSAJE_COMPLETO_GEN = 'Ok'
 
-            FCH_INICIO_LECT_GENE_ventas = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+            #FCH_INICIO_LECT_GENE = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+            FCH_INICIO_LECT_GENE = datetime.now().strftime('%Y-%m-%d ') + hora_orquestado# fch_dato en tbl_log
+            #print ("fch inicio lect:"+ str(FCH_INICIO_LECT_GENE))
 
-            ID_ESTATUS_DETA_ventas = ENDPOINTS_OK
+            ID_ESTATUS_DETA = ENDPOINTS_OK
 
-            intento = 0
+            nombre_empresa = obtener_nombre_empresa(cone, id_emp)
+
+            total_filas_leidas = 0
+            total_filas_insertadas = 0
+
+            CANT_REINTENTOS_DETA = 1
+
+            '''CANT_LECT_GENE = len(endpoints_por_leer)
+            ID_LOG_DETA = insertar_datos_log(cone)'''
+
+             # Llamada inicial para obtener el total de páginas
+            #respuesta_inicial = obtener_respuesta(url, item_por_pagina, "1", token)
+            respuesta_inicial = obtener_respuesta(url, item_por_pagina, numero_pagina, token)
+     
+            '''intento = 0
             for intento in range(max_reintentos):
                 print ("Intento: "+str(intento))
+                 
+                #guardo el reintento que me tiró datos
+                CANT_REINTENTOS_DETA_ventas = intento
+                
+                FCH_INICIO_LECT_DETA_ventas = datetime.now().strftime("%d-%m-%Y %H:%M:%S") '''
+           
+            FCH_INICIO_LECT_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
+            #test1
+            print ("FCH_INICIO_LECT_DETA: "+ str(FCH_INICIO_LECT_DETA) )
+
+
+            contador = 1
+
+            if respuesta_inicial.status_code == 200:
+                    MENSAJE_COMPLETO_GEN = ''
+                    
+                    #INICIO DE LECTURA
+                    FCH_DATO_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
+
+
+                    total_items = respuesta_inicial.json()['totalItems']
+                    total_paginas = calcular_total_paginas(total_items, int(item_por_pagina))
+                    
+                    print ("total items recibido "+ str(total_items))
+                    print ("total paginas a recorrer "+ str(total_paginas))
+
+                    # Procesa cada página
+                    for numero_pagina_actual in range(1, total_paginas + 1):
+                        #print ("entre a procesar paginas")
+                        print ("num pag actual: " + str(numero_pagina_actual))
+
+                        respuesta_completa = obtener_respuesta(url, item_por_pagina, str(numero_pagina_actual), token)
+                        
+                        # Aquí comienza la lógica de procesamiento de respuesta_completa
+                        if respuesta_completa.status_code == 200:
+                           
+                            items_totales = respuesta_completa.json()['totalItems']
+
+                            total_filas_leidas += items_totales  # Acumula el total de filas leídas
+
+
+                            if items_totales > 0: #si hay al menos un registro, intento insertar a la tabla de rompimiento.-
+
+                                lista_tbl_clientes_proveedores_empresas = lista_para_tbl_clientes_proveedores_empresas(respuesta_completa.json()['saleList'], id_emp, cone)
+                                
+                                filas_insertadas_tbl_cli_prov_emp = insert_lista_para_tbl_clientes_proveedores_empresas(lista_tbl_clientes_proveedores_empresas, cone)
+                        
+                                if filas_insertadas_tbl_cli_prov_emp > 1 :
+                                    print("Nuevos Clientes en tbl_clientes_proveedores_empresas: "+str(filas_insertadas_tbl_cli_prov_emp))
+                                    with open(ruta_archivo, "a") as archivo:                   
+                                        archivo.write( "\nNuevos Clientes en tbl_clientes_proveedores_empresas: "+str(filas_insertadas_tbl_cli_prov_emp+ "\n") )                      
+                            
+                                #envío el token, porque lo ocupo para el pdf y xml..   
+                                
+                                #INSERTAR DATOS DE FACTURAS
+                                facturas_insertadas = insertar_saleList(respuesta_completa.json(), cone, id_emp, token)   
+                                
+                                total_filas_insertadas += facturas_insertadas  # Acumula el total de filas insertadas
+
+
+                                cod_rpta = respuesta_completa.status_code
+                                mensaje = respuesta_completa.json()['message']
+
+
+                                with open (ruta_archivo, 'a') as archivo:
+                                    archivo.write("{} | Página {} | {} | Filas Insertadas: {} | Filas Respuesta: {}  | Código Respuesta {} | {} \n".format(fecha_actual,numero_pagina_actual, nombre_empresa[0],facturas_insertadas,items_totales, cod_rpta, mensaje) )   
+                                contador += 1
+                                print("{} | Página {} | {} | Filas Insertadas: {} | Filas Respuesta: {}  | Código Respuesta {} | {} \n".format(fecha_actual, numero_pagina_actual, nombre_empresa[0],facturas_insertadas,items_totales, cod_rpta, mensaje) )   
+                            
+
+                                
+
+                                CANT_READ_DETA = items_totales
+                                CANT_INSERT_DETA = facturas_insertadas
+                                FCH_DATO_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
+                                FCH_FIN_LECT_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+                                
+                                #ID_ESTATUS_DETA = RESPUESTA_OK 
+                                ID_ESTATUS_DETA = FIN_OK
+                                
+                                #esto debo areglarlo para que el total de lecturas tambien se sume.
+                                OK_LECT_GENE += 1
+                                print ("*****")
+
+                                pass
+                            
+
+                        else:
+                            CANT_REINTENTOS_DETA += 1 #se suma un reintento.
+
+                            MENSAJE_COMPLETO_GEN = 'Error'
+
+                            print("Error en respuesta..") #romper la actulizacion lectura.
+                            # Fecha actual
+                            '''fecha_actual_str = datetime.now().strftime("%d-%m-%Y %H:%M:%S")    
+
+                            ventas_insertadas = 0
+                            filas_afectadas = 0'''
+
+                            FCH_DATO_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
+                            FCH_FIN_LECT_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
+                            CANT_READ_DETA = 0
+                            CANT_INSERT_DETA = 0
+                            
+                            ID_ESTATUS_DETA = RESPUESTA_FAIL
+                            print ("id_status_deta: " + str(ID_ESTATUS_DETA))
+                            #ID_ESTATUS_DETA = RESPUESTA_ALERT #al menos una respuesta entró en error.
+
+                            #INSERCIÓN BD tabla tbl_log_detalle_sii
+                            #insert_log_det_fail = insertar_datos_log_detalle_defontana(cone, ID_LOG_DETA, ID_ESTATUS_DETA, FCH_DATO_DETA, FCH_INICIO_LECT_DETA, FCH_FIN_LECT_DETA, CANT_READ_DETA, CANT_INSERT_DETA, ID_LECTURA_DETA, CANT_REINTENTOS_DETA)
+                            
+                            #test1 16-11 19.28
+                            insert_log_det_fail = insertar_datos_log_detalle_defontana(cone, ID_LOG_DETA, ID_ESTATUS_DETA, FCH_DATO_DETA, FCH_INICIO_LECT_DETA, FCH_FIN_LECT_DETA, total_filas_leidas, total_filas_insertadas, ID_LECTURA_DETA, CANT_REINTENTOS_DETA)
+                           
+                            print ("insert log det fail: ",str(insert_log_det_fail))
+                            FAIL_LECT_GENE += 1
+                     
+                    ID_ESTATUS_DETA = FIN_OK
+                   # FCH_DATO_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
+
+                    FCH_FIN_LECT_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
+
+                    # Inserción de un único registro de detalle después de procesar todas las páginas
+                    insert_log_detalle_ok = insertar_datos_log_detalle_defontana(cone, ID_LOG_DETA, ID_ESTATUS_DETA, FCH_DATO_DETA, FCH_INICIO_LECT_DETA, FCH_FIN_LECT_DETA, total_filas_leidas, total_filas_insertadas, ID_LECTURA_DETA, CANT_REINTENTOS_DETA)
+                    #print("insert log det ok: ", str(insert_log_detalle_ok))
+
+                            
+            else :
+                MENSAJE_COMPLETO_GEN = 'Error'
+
+            #aqui finalizar la lectura del log.
+            #fecha_actual = datetime.now().strftime("%d-%m-%Y %H:%M:%S")#strftime("%Y-%m-%d %H:%M:%S")
+            fecha_fin = datetime.now().strftime("%d-%m-%Y %H:%M:%S.%f")
+
+            # Fecha actual
+            fecha_actual_str = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+
+            COMENT_LECT_GENE = MENSAJE_COMPLETO_GEN
+
+            if FAIL_LECT_GENE == CANT_LECT_GENE:
+                COMENT_LECT_GENE = "API CON FALLA TOTAL"
+            #else:
+            #    COMENT_LECT_GENE = "TERMINADO OK"
+            
+            FCH_FIN_LECT_GENE = datetime.now().strftime("%d-%m-%Y %H:%M:%S")  
+
+            # actualizar datos de tbl_log
+            actualizar_log(cone, ID_LOG_DETA, FCH_INICIO_LECT_GENE, FCH_FIN_LECT_GENE, CANT_LECT_GENE, OK_LECT_GENE, FAIL_LECT_GENE, COMENT_LECT_GENE)
+
+            cant_lect = 0 #filas totales
+            ok_lect  = 0 #filas insertadas
+            fail_lect = 0 #filas con fallas  
+
+            with open(ruta_archivo, 'a') as archivo:
+                archivo.write("*** FIN LECTURA FACTURAS VENTAS: {} ***\n\n".format(fecha_actual) )   
+            cone.commit()
+            cone.close()                
+
+          
+            # ...
+            
+            #print("fin main") 
 
 
 
@@ -1278,13 +1485,8 @@ def procesar_factura_venta(lectura, ruta_archivo, ID_LOG):
     
 
 
-
-
-
-
-
 def procesar_caf(lectura, ruta_archivo, ID_LOG, hora_orquestado):
-    print ("entre al procesar caf")
+    #print ("entre al procesar caf")
     id_lectura = lectura['id_lectura']
     id_emp = lectura['id_emp']
     url = lectura['url']
@@ -1421,7 +1623,8 @@ def procesar_lectura(lectura, log_filename, ID_LOG, called_execution_time):
         # Inserta un registro en tbl_log y obtén el ID_LOG
         #ID_LOG = insertar_datos_log(conexion)
         
-        procesar_factura_venta(lectura, ruta_archivo, ID_LOG)#print ()
+        #procesar_factura_venta(lectura, ruta_archivo, ID_LOG)#print ()
+        procesar_factura_venta(lectura, ruta_archivo, ID_LOG, called_execution_time)
     
     elif tipo_lectura == "get_caf":  
         # Inserta un registro en tbl_log y obtén el ID_LOG
@@ -1459,7 +1662,19 @@ def procesar_grupo_obtener_lecturas(id_grupo,called_execution_time):
             # escribo en el log cada lectura que haré secuencial.
             escribir_archivo_log(id_grupo, lecturas_grupo_actual)
 
-            ID_LOG = insertar_datos_log_caf(conexion, called_execution_time)
+
+            FCH_LOG= datetime.now().strftime('%Y-%m-%d ') + called_execution_time
+            #print("fch_log:" + str(FCH_LOG))
+
+            #ID_LOG = insertar_datos_log_caf(conexion, called_execution_time)
+            ID_LOG = insertar_datos_log(conexion, called_execution_time)
+            
+            print ("ID LOG: "+str(ID_LOG))
+           
+            #id logsuelo
+            #testyeoeoeoeo
+
+
 
             # Proceso cada lectura y evaluo QUE ES
             for lectura in lecturas_grupo_actual:                
@@ -1493,11 +1708,17 @@ COMENT_LECT_GENE = None
 
 ### Métodos para Logs.
 # INSERTAR DATOS EN LOG GENERAL
-def insertar_datos_log(_conexion):  
+
+def insertar_datos_log(_conexion, called_execution_time):  
+#def insertar_datos_log(_conexion):  
     cursor = _conexion.cursor()
     
-    FCH_DATO_GENE = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-    
+    #FCH_DATO_GENE = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+    # Añadir la fecha actual al tiempo
+    FCH_DATO_GENE = datetime.now().strftime('%Y-%m-%d ') + called_execution_time
+
+
+
     cursor.callproc("fn_log_insertar_datos", [
         ID_SERVICIO_GENE,
         FCH_DATO_GENE
