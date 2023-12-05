@@ -126,12 +126,14 @@ def calcular_total_paginas(total_items, items_por_pagina):
 
 ##### Para Facturas de venta
 #llamada de facturas de ventas
-def obtener_respuesta(_url, _item_por_pagina, _numero_pagina, _token):
-    
+#def obtener_respuesta(_url, _item_por_pagina, _numero_pagina, _token):
+
+def old_fashionedobtener_respuesta_old_fashioned(_url, _item_por_pagina, _numero_pagina, _token,resta_mes_periodo):
+
     # Obtener la fecha actual en formato de cadena "YYYY-MM-DD"
     fecha_actual_str = datetime.now().strftime("%Y-%m-%d")
 
-    # Convertir la cadena en un objeto datetime
+    # Convertir la cadena de fecha en un objeto datetime
     fecha_actual = datetime.strptime(fecha_actual_str, "%Y-%m-%d")
     #print(fecha_actual)
     
@@ -142,21 +144,28 @@ def obtener_respuesta(_url, _item_por_pagina, _numero_pagina, _token):
     # Calcular la fecha de 5 días atrás
     #fecha_5_dias_atras = fecha_actual - timedelta(days=5)
 
-    #Fecha 30 días atras
+    #codigo deprecado..
+    '''#Fecha 5 días atras
     fecha_5_dias_atras = fecha_actual - timedelta(days=30)
-    
-    
-    
     # Convertir la fecha de 5 días atrás en formato de cadena "YYYY-MM-DD"
     fecha_5_dias_atras_str = fecha_5_dias_atras.strftime("%Y-%m-%d")
-   
     # reemplazar or lectura máxima 5 días atras....
     #fecha_5_dias_atras_str = "2023-08-01"
-    #fecha_5_dias_atras_str = "2023-09-01"
+    #fecha_5_dias_atras_str = "2023-09-01"'''
+    #fin codigo deprecado, para que sea desde principio de mes en ves de solo 5 dias atras.
+
+
+    # Obtener el primer día del mes actual
+    fecha_principio_mes = fecha_actual.replace(day=1)
+
+    # Convertir la fecha del primer día del mes en formato de cadena "YYYY-MM-DD"
+    fecha_principio_mes_str = fecha_principio_mes.strftime("%Y-%m-%d")
+
 
     # Luego, convierte las fechas a cadenas antes de usarlas en la URL
-    url = _url.replace(":fch_inicio", fecha_5_dias_atras_str).replace(":fch_fin", fecha_actual_str).replace(":item_por_pagina", _item_por_pagina).replace(":numero_pagina", _numero_pagina)
-        
+    #url = _url.replace(":fch_inicio", fecha_5_dias_atras_str).replace(":fch_fin", fecha_actual_str).replace(":item_por_pagina", _item_por_pagina).replace(":numero_pagina", _numero_pagina)
+    url = _url.replace(":fch_inicio", fecha_principio_mes_str).replace(":fch_fin", fecha_actual_str).replace(":item_por_pagina", _item_por_pagina).replace(":numero_pagina", _numero_pagina)
+         
     #print (url)
 
     payload = {}
@@ -168,6 +177,64 @@ def obtener_respuesta(_url, _item_por_pagina, _numero_pagina, _token):
     #print("respuesta completa")
     #print(response.json())
     return response
+
+#parchado para que funcione como mes entero anterior, considerando diciembre y enero.
+def obtener_respuesta(_url, _item_por_pagina, _numero_pagina, _token, resta_mes_periodo):
+    fecha_actual = datetime.now()
+    
+    #Fecha de Prueba 15/01/2025
+    #fecha_actual = datetime(2024, 1, 15)
+    #print("Fecha actual (de prueba):", fecha_actual) 
+
+    #print ("fch actual: " +str(fecha_actual))
+    #print ("resta mes periodo: "+str(resta_mes_periodo))
+
+    #hardcodeo para probrar que me lea un mes anterior.
+    #resta_mes_periodo = 1 
+
+    if resta_mes_periodo == 0:
+        # Uso de fechas actuales
+        fecha_inicio = fecha_actual.replace(day=1)
+        fecha_fin = fecha_actual
+    else:        
+        #print("Resta mes periodo: "+str(resta_mes_periodo))
+
+        # Calculando el primer día del mes anterior y el último día de ese mes
+        primer_dia_mes_anterior = fecha_actual.replace(day=1) - timedelta(days=1)
+        primer_dia_mes_anterior = primer_dia_mes_anterior.replace(day=1, month=primer_dia_mes_anterior.month - resta_mes_periodo + 1)
+        
+        # Ajustar año y mes para el último día del mes anterior
+        mes_siguiente = primer_dia_mes_anterior.month + 1
+        anio_siguiente = primer_dia_mes_anterior.year
+        
+        if mes_siguiente > 12: #En el caso que estemos en Diciembre.
+            mes_siguiente = 1
+            anio_siguiente += 1
+
+        ultimo_dia_mes_anterior = datetime(anio_siguiente, mes_siguiente, 1) - timedelta(days=1)
+
+        fecha_inicio = primer_dia_mes_anterior
+        fecha_fin = ultimo_dia_mes_anterior
+
+        #print("fecha_inicio: " + str(fecha_inicio) + "| fecha_fin: " + str(fecha_fin) )
+
+    # Convertir las fechas a formato de cadena "YYYY-MM-DD"
+    fecha_inicio_str = fecha_inicio.strftime("%Y-%m-%d")
+    fecha_fin_str = fecha_fin.strftime("%Y-%m-%d")
+
+    # Construir la URL con las fechas correspondientes
+    url = _url.replace(":fch_inicio", fecha_inicio_str).replace(":fch_fin", fecha_fin_str).replace(":item_por_pagina", _item_por_pagina).replace(":numero_pagina", _numero_pagina)
+
+    # Resto del código para realizar la solicitud HTTP...
+    payload = {}
+    headers = {
+        'Authorization': 'Bearer {}'.format(_token)
+    }
+    response = requests.request("GET", url, headers=headers, data=payload)
+    
+    return response
+
+
 
 def insertar_saleList(_respuesta, _conexion, _id_emp, _token):
     saleLists = _respuesta['saleList']
@@ -1217,7 +1284,8 @@ def escribir_archivo_log(id_grupo_lectura, lecturas):
                 f"\tMax Reintentos: {lectura['max_reintentos']}\n"
             )
 
-def manejar_grupo(id_grupo):
+def manejar_grupo(id_grupo, tipos_lectura):
+#def manejar_grupo(id_grupo):
     primera_ejecucion = True
 
     while True:
@@ -1242,7 +1310,11 @@ def manejar_grupo(id_grupo):
         #envio la hora de ejecucion para que sea todo más cool
         #para ver en la hora que fue llamada una ejecución.-
         called_execution_time = hora_ejecucion.strftime('%H:%M:%S')
-        procesar_grupo_obtener_lecturas(id_grupo,called_execution_time)
+        
+        #procesar_grupo_obtener_lecturas(id_grupo,called_execution_time)
+        procesar_grupo_obtener_lecturas(id_grupo,called_execution_time,tipos_lectura)
+        
+        
         print(f"Ejecutado proceso para el grupo {id_grupo} a las {hora_ejecucion.strftime('%H:%M:%S')}")
 
 def procesar_factura_venta(lectura, ruta_archivo, ID_LOG, hora_orquestado):
@@ -1262,6 +1334,8 @@ def procesar_factura_venta(lectura, ruta_archivo, ID_LOG, hora_orquestado):
     numero_pagina = lectura['numero_pagina']
     token = lectura['token']
     id_gpo = lectura['id_gpo']
+
+    resta_mes_periodo = lectura['resta_mes_periodo']   
 
     log_filename = os.path.join(log_directory, f"log_grupo_lectura_{id_gpo}.txt")
 
@@ -1305,9 +1379,11 @@ def procesar_factura_venta(lectura, ruta_archivo, ID_LOG, hora_orquestado):
             '''CANT_LECT_GENE = len(endpoints_por_leer)
             ID_LOG_DETA = insertar_datos_log(cone)'''
 
-             # Llamada inicial para obtener el total de páginas
-            #respuesta_inicial = obtener_respuesta(url, item_por_pagina, "1", token)
-            respuesta_inicial = obtener_respuesta(url, item_por_pagina, numero_pagina, token)
+            # Llamada inicial para obtener el total de páginas            
+            #respuesta_inicial = obtener_respuesta(url, item_por_pagina, numero_pagina, token)
+            respuesta_inicial = obtener_respuesta(url, item_por_pagina, numero_pagina, token, resta_mes_periodo)
+            
+            
      
             '''intento = 0
             for intento in range(max_reintentos):
@@ -1343,8 +1419,10 @@ def procesar_factura_venta(lectura, ruta_archivo, ID_LOG, hora_orquestado):
                         #print ("entre a procesar paginas")
                         print ("num pag actual: " + str(numero_pagina_actual))
 
-                        respuesta_completa = obtener_respuesta(url, item_por_pagina, str(numero_pagina_actual), token)
-                        
+                        #respuesta_completa = obtener_respuesta(url, item_por_pagina, str(numero_pagina_actual), token)
+                        respuesta_completa = obtener_respuesta(url, item_por_pagina, str(numero_pagina_actual), token, resta_mes_periodo)
+
+
                         # Aquí comienza la lógica de procesamiento de respuesta_completa
                         if respuesta_completa.status_code == 200:
                            
@@ -1381,8 +1459,6 @@ def procesar_factura_venta(lectura, ruta_archivo, ID_LOG, hora_orquestado):
                                 contador += 1
                                 print("{} | Página {} | {} | Filas Insertadas: {} | Filas Respuesta: {}  | Código Respuesta {} | {} \n".format(fecha_actual, numero_pagina_actual, nombre_empresa[0],facturas_insertadas,items_totales, cod_rpta, mensaje) )   
                             
-
-                                
 
                                 CANT_READ_DETA = items_totales
                                 CANT_INSERT_DETA = facturas_insertadas
@@ -1609,39 +1685,99 @@ def insertar_caf_en_bd(conexion, item):
     finally:
         cursor.close()
 
-def procesar_lectura(lectura, log_filename, ID_LOG, called_execution_time):
+
+def cargar_tipos_lectura(id_serv):
+    tipos_lectura = {}
+    # Conectar con la base de datos y ejecutar una consulta 
+    # para obtener los id_tipo_lect y su correspondiente nombre 
+    # para el id_serv especificado.
+
+    conexion = connection_database()  # Conexión a la base de datos
+    cursor = conexion.cursor()
+    query = "SELECT id_tipo_lect, nom_lect FROM tbl_tipos_lecturas WHERE id_serv = %s"
+    cursor.execute(query, (id_serv,))
+    
+    for id_tipo_lect, nom_lect in cursor.fetchall():
+        tipos_lectura[id_tipo_lect] = nom_lect
+
+    cursor.close()
+    conexion.close()
+
+    return tipos_lectura
+
+
+#def procesar_lectura(lectura, log_filename, ID_LOG, called_execution_time):
 #def procesar_lectura(lectura, ruta_archivo,ID_LOG):    
 #def procesar_lectura(lectura, ruta_archivo, called_execution_time):
 #def procesar_lectura(lectura, ruta_archivo):
 
-    conexion = connection_database()
+def procesar_lectura(lectura, log_filename, ID_LOG, called_execution_time,tipos_lectura):
 
-    tipo_lectura = lectura['endpoint']  # Asumiendo que 'endpoint' contiene la información de tipo de factura
+    #tipo_lectura = lectura['endpoint']  # Asumiendo que 'endpoint' contiene la información de tipo de factura
+    id_tipo_lectura = lectura['id_tipo_lect']
 
-    
-    if tipo_lectura == "facturas_ventas":        
-        # Inserta un registro en tbl_log y obtén el ID_LOG
-        #ID_LOG = insertar_datos_log(conexion)
+    # Verificar si el id_tipo_lectura es válido
+    if id_tipo_lectura not in tipos_lectura:
+        print(f"Tipo de lectura desconocido no encontrado en tabla tbl_tipos_lecturas, id_lectura: {lectura['id_lectura']}")
         
-        #procesar_factura_venta(lectura, ruta_archivo, ID_LOG)#print ()
-        procesar_factura_venta(lectura, ruta_archivo, ID_LOG, called_execution_time)
-    
-    elif tipo_lectura == "get_caf":  
-        # Inserta un registro en tbl_log y obtén el ID_LOG
-        #ID_LOG = insertar_datos_log_caf(conexion)
-        
-
-        #procesar_caf(lectura, ruta_archivo, ID_LOG)
-        procesar_caf(lectura, ruta_archivo, ID_LOG, called_execution_time)
-    
-    else:   
-        print(f"Tipo de factura desconocido, id_lectura:  {lectura['id_lectura']}")
-
         with open(ruta_archivo, "a") as archivo:                   
-            archivo.write( f"Tipo de lectura desconocido, id_lectura:  {lectura['id_lectura']}")
+            archivo.write(f"Tipo de lectura desconocido no encontrado en tabla tbl_tipos_lecturas, id_lectura: {lectura['id_lectura']}")
+        return
+    
 
+    # Obtener el día actual y la hora actual
+    hoy = datetime.now()
+    dia_actual = hoy.day
+    hora_actual = hoy.time()
+
+    #para validar si la lectura debe correr hoy
+    intervalo_inicio_numero_dia_on = lectura['intervalo_inicio_numero_dia_on']
+    intervalo_fin_numero_dia_on = lectura['intervalo_fin_numero_dia_on']
+    #para validar si la lectura debe correr en el rango de hora actual
+    intervalo_inicio_hora_on = lectura['intervalo_inicio_hora_on']
+    intervalo_fin_hora_on = lectura['intervalo_fin_hora_on']
+
+    # Comprobar si el día actual está dentro del rango permitido
+    if intervalo_inicio_numero_dia_on <= dia_actual <= intervalo_fin_numero_dia_on:
+        # Comprobar si la hora actual está dentro del rango permitido
+        if intervalo_inicio_hora_on <= hora_actual <= intervalo_fin_hora_on:
+       
+            #if tipo_lectura == "facturas_ventas":    
+            if id_tipo_lectura == 5: #en bd: nom_lect= FACTURAS VENTA & desc_lect = Obtener Facturas desde API Defontana
+                #procesar_factura_venta(lectura, ruta_archivo, ID_LOG)#print ()
+                #print("id_tipo_lectura: "+str(id_tipo_lectura))
+                procesar_factura_venta(lectura, ruta_archivo, ID_LOG, called_execution_time)
+            
+            #elif tipo_lectura == "get_caf": 
+            elif id_tipo_lectura == 6:#en bd: nom_lect= CODIGO ASIGNACION DE FOLIOS FACTURAS & desc_lect = Obtener CAF desde API Defontana
+                #procesar_caf(lectura, ruta_archivo, ID_LOG)
+                procesar_caf(lectura, ruta_archivo, ID_LOG, called_execution_time)
+                #print("id_tipo_lectura: "+str(id_tipo_lectura))
+            
+            else:   
+                print(f"Tipo de factura desconocido, id_lectura:  {lectura['id_lectura']}")
+
+                with open(ruta_archivo, "a") as archivo:                   
+                    archivo.write( f"Tipo de lectura desconocido, id_lectura:  {lectura['id_lectura']}")
+        
+        else:
+            print(f"Fuera del horario permitido, id_lectura:  {lectura['id_lectura']}")
+
+            with open(ruta_archivo, "a") as archivo:  
+                archivo.write(str(datetime.now())+f" | Fuera del horario permitido, id_lectura:  {lectura['id_lectura']}")
+
+
+    else:
+        print(f"Fuera de los días permitidos, id_lectura:  {lectura['id_lectura']}")
+
+        with open(ruta_archivo, "a") as archivo:  
+            archivo.write(str(datetime.now())+f" | Fuera de los días permitidos, id_lectura:  {lectura['id_lectura']}")
+
+
+def procesar_grupo_obtener_lecturas(id_grupo,called_execution_time,tipos_lectura):
 #def procesar_grupo_obtener_lecturas(id_grupo):
-def procesar_grupo_obtener_lecturas(id_grupo,called_execution_time):
+#def procesar_grupo_obtener_lecturas(id_grupo,called_execution_time):    
+
     log_filename = os.path.join(log_directory, f"log_grupo_lectura_{id_grupo}.txt")
     '''ahora = datetime.now()
     cadena_fecha = ahora.strftime("%H:%M:%S.%f %d/%m/%Y")
@@ -1678,7 +1814,9 @@ def procesar_grupo_obtener_lecturas(id_grupo,called_execution_time):
 
             # Proceso cada lectura y evaluo QUE ES
             for lectura in lecturas_grupo_actual:                
-                procesar_lectura(lectura, log_filename, ID_LOG, called_execution_time)
+                procesar_lectura(lectura, log_filename, ID_LOG, called_execution_time,tipos_lectura)
+
+                #procesar_lectura(lectura, log_filename, ID_LOG, called_execution_time)
 
                 #procesar_lectura(lectura, log_filename,called_execution_time)
 
@@ -1813,6 +1951,10 @@ def main():
     try:
         # Obtener los grupos iniciales
         lecturas_por_grupo = obtener_lecturas_por_grupo(conexion)
+        # Cuando busco los grupos iniciales, traer los grupos de lectura.
+
+        tipos_lectura = cargar_tipos_lectura(ID_SERVICIO_GENE)  # Cargar los tipos de lectura
+
     except Exception as e:
         print(f"Error obteniendo grupos: {str(e)}")
         conexion.close()
@@ -1827,7 +1969,9 @@ def main():
             print(f"El hilo para el grupo {id_grupo} aún está en ejecución. Saltando...")
             continue
 
-        t = Thread(target=manejar_grupo, args=(id_grupo,))
+        #t = Thread(target=manejar_grupo, args=(id_grupo,))
+        t = Thread(target=manejar_grupo, args=(id_grupo, tipos_lectura))
+        
         print(f"Lanzando hilo para el grupo {id_grupo}")
         active_threads[id_grupo] = t
         t.start()
