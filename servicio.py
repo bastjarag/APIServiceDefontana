@@ -10,8 +10,9 @@ from datetime import datetime, timedelta
 import lecturas_grupos  
 
 class ApiServiceSii_hilos(win32serviceutil.ServiceFramework):
-    _svc_name_ = 'ApiServiceDefontana_Hilos'
-    _svc_display_name_ = 'ApiServiceDefontana_Hilos'
+    _svc_name_ = 'APIServiceDeFontana'
+    
+    _svc_display_name_ = 'APIServiceDeFontana'
     
     def __init__(self, args):
         win32serviceutil.ServiceFramework.__init__(self, args)
