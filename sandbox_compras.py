@@ -180,11 +180,7 @@ def obtener_respuesta_compra(_url, _item_por_pagina, _numero_pagina, _token, res
     return response
 
 def formatear_rut(rut):
-    '''# Ejemplo de uso:
-    rut = "76.708.710-1"
-    rut_formateado = formatear_rut(rut)
-    print(rut_formateado)  # Esto imprimirá "76708710"'''
-    # Eliminar puntos y guiones y obtener solo los números y el dígito verificador
+    
     rut_formateado = ''.join(filter(str.isdigit, rut))
 
     # Si el rut formateado tiene más de 1 caracter, eliminar el último que es el dígito verificador
@@ -193,6 +189,7 @@ def formatear_rut(rut):
 
     return rut_formateado
 
+#pasar a funcion de bd
 def obtener_id_cliprov(rut, _conexion):
     cursor = _conexion.cursor()
     # Buscar el id_company correspondiente al rut en tbl_clientes_proveedores
@@ -219,7 +216,6 @@ def lista_para_tbl_clientes_proveedores_empresas_compras(json_data, id_emp, _con
             rut_formateado = formatear_rut(rut) #pasa de rut con puntos guion y dv. A: sin puntos y sin dv.
             id_cliprov = obtener_id_cliprov(rut_formateado, _conexion)
 
-            
             if id_cliprov is not None:
                 # Agregar una tupla con los valores a la lista
                 lista_cli_prov_emp.append((id_cliprov, id_emp, id_tipo_cliprov))
@@ -241,22 +237,13 @@ def insert_lista_para_tbl_clientes_proveedores_empresas(keys, connection):
 
 
 def insertar_purchaseList(_respuesta, _conexion, _id_emp, _token):
+    #al parecer esta es la data
     purchaseList = _respuesta['data'] #dentro del json 
-
+    #y tengo que entrar un nivel mas adentro aun
+    
     filas_afectadas_total = 0 #facturas insertadas.
     for purchase in purchaseList:
         
-        #documentType = purchase['documentType']
-
-        '''# Si documentType no es 'FVAELECT', continuar con el siguiente registro
-        if documentType != 'FVAELECT':
-            print("Documento NO es factura electrónica (FVAELECT)!!!!!!!")
-            print("Es: "+str(documentType))
-            continue
-            '''
-
-        #print(documentType)
-
         #mapeo de campos
         origin = purchase['origin']
         companyId = purchase['companyId']
@@ -300,14 +287,7 @@ def insertar_purchaseList(_respuesta, _conexion, _id_emp, _token):
         
         # Datos dentro de attachedDocuments en JSON
         '''attachedDocumentsDate = None
-        attachedDocumentType = None
-        attachedDocumentName = None
-        attachedDocumentNumber = None
-        attachedDocumentTotal = None
-        attachedDocumentTotalDocumentTypeId = None
-        attachedDocumentFolio = None
-        attachedDocumentsReason = None
-        attachedDocumentsGloss = None
+        
         attachedDocuments = saleList['attachedDocuments']'''
 
         '''for attachedDocument in attachedDocuments:
@@ -331,7 +311,7 @@ def insertar_purchaseList(_respuesta, _conexion, _id_emp, _token):
     
         
         # buscar rut cliente en tbl_clientes_proveedores
-        rut_sin_dv = providerId[:-1].replace(".","").replace("-","") # quitar . - dv
+        rut_sin_dv = providerId[:-1].replace(".","").replace("-","") # quitar . - dv (punto guion y dv)
         dv = providerId[-1]
         id_proveedor = None
         
@@ -343,28 +323,21 @@ def insertar_purchaseList(_respuesta, _conexion, _id_emp, _token):
                                                     providerId, 
                                                     rut_sin_dv,
                                                     dv
+                                            
                                                     ])
             id_proveedor = cursor.fetchone()
             id_proveedor = id_proveedor[0] # Obtener el id cliente
-            #print("id_cli",id_cliente)
-            
-            # print(id_cliente)
-            #_conexion.commit()   
-            # Incrementar el valor de filas_afectadas_total por el valor de retorno de la función.
-            #filas_afectadas_total += id_cliente
+           
             if id_proveedor == 0: 
                 _conexion.rollback()
-            #_conexion.commit()   
-           
+             
         except Exception as e:
             _conexion.rollback()
             print("ERROR: {}".format(e))
             with open (ruta_archivo, 'a') as archivo:
                 archivo.write("\nError al obtener ID de Cliente Proveedor desde la base de datos...")
             
-        
-        #print("antes de insertar en facturas de venta.s...")   
-        # Insertar datos en tbl_datos_defontana_ventas
+    
         if id_proveedor > 0:
             try:
             # print("dentro de factrura vendta....")
@@ -376,6 +349,46 @@ def insertar_purchaseList(_respuesta, _conexion, _id_emp, _token):
                                                         _id_emp,
                                                         id_proveedor,
                                                         fecha_actual,
+                                                        #### 1am 23-1-24
+                                                        origin,
+                                                        companyId,
+                                                        providerLegalCode,
+                                                        providerName,
+                                                        documentNumber,
+                                                        documentType,
+                                                        documentTotal,
+                                                        documentEmissionDate,
+                                                        documentEntryType,
+                                                        documentPlatformId,
+                                                        siiReceiptDate,
+                                                        lastStatus,
+                                                        isIntegrated,
+                                                        isDigital,
+                                                        isReceived,
+                                                        providerId,
+                                                        siiDocumentType,
+                                                        documentTypeId,
+                                                        fiscalYear,
+                                                        voucherTypeId,
+                                                        voucherNumber,
+                                                        accoutingBalance,
+                                                        key,
+                                                        canEdit,
+                                                        canRemove,
+                                                        deleteFailCondition,
+                                                        canFix,
+                                                        canCancel,
+                                                        canReceive,
+                                                        canReject,
+                                                        canLey19983,
+                                                        canGenericView,
+                                                        canPreview,
+                                                        canPrint,
+                                                        canReceipt,
+                                                        hasStockDocumentsRelated,
+                                                        hasMenu,
+                                                        originDescription,
+                                                        #### 1am 23-1-24
                                                         
                                                         ])
                 
@@ -384,9 +397,8 @@ def insertar_purchaseList(_respuesta, _conexion, _id_emp, _token):
                 
                 #probar que inserte facturas...
                 print("*"*20)
-                print("factura: ",voucherInfoFolio)
+                print("factura: ",documentNumber)
                 print("insertó factura: ",valor_retorno)
-                
                 
                 if valor_retorno == 0:
                     _conexion.rollback()
@@ -403,15 +415,14 @@ def insertar_purchaseList(_respuesta, _conexion, _id_emp, _token):
                 with open (ruta_archivo, 'a') as archivo:
                     archivo.write("\nError al insertar factura en la base de datos..")
 
+            #esto no lo tiene actualmente las facturas de compra
+            details = purchaseList['details'] #items de cada factura...
 
-            details = saleList['details'] #items de cada factura...
-
-            valor_retorno_detalle = 0 #para retornar el valor de detalles insertados, consultado despues...
-           
-           
+            #valor_retorno_detalle = 0 #para retornar el valor de detalles insertados, consultado despues...
            
             # Insertar detalles de ventas
             if valor_retorno > 0: #si la factura se insertó, me insertará detalle...
+                
                 for detail in details: #recorro cada detalle..
                     detailLine = detail['detailLine']
                     type = detail['type']
@@ -471,25 +482,8 @@ def insertar_purchaseList(_respuesta, _conexion, _id_emp, _token):
                         with open(ruta_archivo, 'a') as archivo:
                             archivo.write("Error al Insertar facturas en la base de datos...") 
                 print("insertó detalle: ", valor_retorno_detalle)    
-                if valor_retorno_detalle > 0: #se insertó el detalle, insertaré ahora los b64...
-                    #ahora voy a insertar b64 de pdf y xml...
-
-                    #insertar pdf por folio, y empresa:
-                    #testeo para el 14-11.-
-                    '''try:
-                        #testeo.
-                        #print("id emp",_id_emp)
-                        #print("folio", voucherInfoFolio)
-                        b64 = obtener_b64_por_folio(_token,voucherInfoFolio)
-                        #print("*"*20)
-                        rpta_pdf = insertar_pdf(_id_emp, voucherInfoFolio, b64, _conexion)
-                        print("Insertó pdf:",rpta_pdf)
-                        if rpta_pdf < 0 : #retorna -1 en caso de error...
-                            _conexion.rollback()
-                    except Exception as e:
-                        _conexion.rollback()
-                        print("Fallo la insercion de factura.") '''     
-
+                if valor_retorno_detalle > 0: 
+                     
                     try:
           
                         b64 = obtener_b64_por_folio(_token, voucherInfoFolio)                        
@@ -507,27 +501,7 @@ def insertar_purchaseList(_respuesta, _conexion, _id_emp, _token):
                     except Exception as e:
                         _conexion.rollback()
                         print("Fallo la inserción de factura:", e)
-
-
-
-                    #insertar xml por folio y empresa...
-
-                    #deprecado:
-
-                    '''try:
-                        if rpta_pdf > 0:
-                            xml_b64 = obtener_xml_b64_por_folio(_token,voucherInfoFolio)   
-                            rpta_xml = insertar_xml(_id_emp, voucherInfoFolio, xml_b64, _conexion)
-                            print ("Insertó xml:", rpta_xml)
-                            filas_afectadas_total +=  rpta_xml #AQUI ES CUANDO INSERTO EL REGISTRO ENTERO
-
-                            if rpta_xml < 0 : #retorna -1 en caso de error...
-                                _conexion.rollback()
-                    except Exception as e:
-                        _conexion.rollback()
-                        print("Fallo la insercion de xml de factura.")     
-
-                    _conexion.commit() ''' 
+                
                     try:
                         if rpta_pdf > 0:
                             xml_b64 = obtener_xml_b64_por_folio(_token, voucherInfoFolio)

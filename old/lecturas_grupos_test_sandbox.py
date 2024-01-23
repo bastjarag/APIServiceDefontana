@@ -124,60 +124,32 @@ def conexion_base_datos():
 def calcular_total_paginas(total_items, items_por_pagina):
     return math.ceil(total_items / items_por_pagina)
 
-##### Para Facturas de venta
-#llamada de facturas de ventas
-#def obtener_respuesta(_url, _item_por_pagina, _numero_pagina, _token):
+#en comun compra y venta
+def insertar_cliprov(rut_txt, rut_sin_dv, dv, _conexion):  #buscar e insertar cliente proveedor en la tabla d ela bd...   
+    try:
+        cursor = _conexion.cursor()        
+        cursor.callproc('fn_defontana_buscar_insertar_cliprov', [   
+                                                rut_txt,
+                                                rut_sin_dv,
+                                                dv
+                                                ])
+        id_cliente = cursor.fetchone()
+        id_cliente = id_cliente[0] # Obtener el id cliente                
 
-def old_fashionedobtener_respuesta_old_fashioned(_url, _item_por_pagina, _numero_pagina, _token,resta_mes_periodo):
+        if id_cliente == 0: 
+            _conexion.rollback()
+  
 
-    # Obtener la fecha actual en formato de cadena "YYYY-MM-DD"
-    fecha_actual_str = datetime.now().strftime("%Y-%m-%d")
-
-    # Convertir la cadena de fecha en un objeto datetime
-    fecha_actual = datetime.strptime(fecha_actual_str, "%Y-%m-%d")
-    #print(fecha_actual)
-    
-    #### test1
-    #fecha_actual_str = "2023-11-17"
-    #fecha_actual_str = "2023-11-16"
-
-    # Calcular la fecha de 5 días atrás
-    #fecha_5_dias_atras = fecha_actual - timedelta(days=5)
-
-    #codigo deprecado..
-    '''#Fecha 5 días atras
-    fecha_5_dias_atras = fecha_actual - timedelta(days=30)
-    # Convertir la fecha de 5 días atrás en formato de cadena "YYYY-MM-DD"
-    fecha_5_dias_atras_str = fecha_5_dias_atras.strftime("%Y-%m-%d")
-    # reemplazar or lectura máxima 5 días atras....
-    #fecha_5_dias_atras_str = "2023-08-01"
-    #fecha_5_dias_atras_str = "2023-09-01"'''
-    #fin codigo deprecado, para que sea desde principio de mes en ves de solo 5 dias atras.
+    except Exception as e:
+        print("ERROR: {}".format(e))
+        with open(ruta_archivo, 'a') as archivo:
+            archivo.write("\nError al buscar insertar cliente proveedor en base de datos...")
+        id_cliente = -1  # Retorna -1 en caso de error
+        
+    return id_cliente
 
 
-    # Obtener el primer día del mes actual
-    fecha_principio_mes = fecha_actual.replace(day=1)
-
-    # Convertir la fecha del primer día del mes en formato de cadena "YYYY-MM-DD"
-    fecha_principio_mes_str = fecha_principio_mes.strftime("%Y-%m-%d")
-
-
-    # Luego, convierte las fechas a cadenas antes de usarlas en la URL
-    #url = _url.replace(":fch_inicio", fecha_5_dias_atras_str).replace(":fch_fin", fecha_actual_str).replace(":item_por_pagina", _item_por_pagina).replace(":numero_pagina", _numero_pagina)
-    url = _url.replace(":fch_inicio", fecha_principio_mes_str).replace(":fch_fin", fecha_actual_str).replace(":item_por_pagina", _item_por_pagina).replace(":numero_pagina", _numero_pagina)
-         
-    #print (url)
-
-    payload = {}
-
-    headers = {
-    'Authorization': 'Bearer {}'.format(_token)
-    }
-    response = requests.request("GET", url, headers=headers, data=payload)
-    #print("respuesta completa")
-    #print(response.json())
-    return response
-
+#de VENTA
 #parchado para que funcione como mes entero anterior, considerando diciembre y enero.
 def obtener_respuesta(_url, _item_por_pagina, _numero_pagina, _token, resta_mes_periodo):
     fecha_actual = datetime.now()
@@ -233,9 +205,7 @@ def obtener_respuesta(_url, _item_por_pagina, _numero_pagina, _token, resta_mes_
     response = requests.request("GET", url, headers=headers, data=payload)
     
     return response
-
-
-
+#de venta
 def insertar_saleList(_respuesta, _conexion, _id_emp, _token):
     saleLists = _respuesta['saleList']
 
@@ -596,28 +566,6 @@ def insertar_saleList(_respuesta, _conexion, _id_emp, _token):
      #factura insertada en bd..      
     return filas_afectadas_total
 
-def insertar_cliprov(rut_txt, rut_sin_dv, dv, _conexion):  #buscar e insertar cliente proveedor en la tabla d ela bd...   
-    try:
-        cursor = _conexion.cursor()        
-        cursor.callproc('fn_defontana_buscar_insertar_cliprov', [   
-                                                rut_txt,
-                                                rut_sin_dv,
-                                                dv
-                                                ])
-        id_cliente = cursor.fetchone()
-        id_cliente = id_cliente[0] # Obtener el id cliente                
-
-        if id_cliente == 0: 
-            _conexion.rollback()
-  
-
-    except Exception as e:
-        print("ERROR: {}".format(e))
-        with open(ruta_archivo, 'a') as archivo:
-            archivo.write("\nError al buscar insertar cliente proveedor en base de datos...")
-        id_cliente = -1  # Retorna -1 en caso de error
-        
-    return id_cliente
 
 def insertar_factura_venta(voucherInfoFolio, _id_emp, id_cliente,fecha_actual,documentType,firstFolio,lastFolio,status,emissionDate,dateTime,expirationDate,
                            contactIndex,paymentCondition,sellerFileId,billingCoin,billingRate,shopId,priceList,giro,city,district,contact,
@@ -767,133 +715,6 @@ def actualizar_datos_usuario(_respuesta, _conexion):
         _conexion.commit()         
     return filas_afectadas_total
 
-'''def insertar_servicios_de_factura (_id_emp,_respuesta, _conexion):
-    serviceList = _respuesta['serviceList']
-    # print("sl",serviceList)
-    #filas_afectadas_total = 0 #facturas insertadas.
-    for saleList in serviceList:
-        
-        #print("*"*20)
-        #print(saleList)
-        type = saleList['type']
-        active = saleList['active']
-        code = saleList['code']
-        print("code",code)
-        desc = saleList['description']
-        #det_desc = saleList['detailedDescription']
-        sellprice = saleList['sellPrice']
-        unit = saleList['unit']
-        unitcost = saleList['unitCost']
-        cat_id = saleList['categoryID']
-        useot = saleList['useOT']
-
-        #buscar e insertar cliente proveedor en la tabla d ela bd...
-        try:
-            cursor = _conexion.cursor()
-            #cursor.callproc('fnc_defontana_bus_ins_cliprov', [
-            cursor.callproc('fn_defontana_insertar_servicio', [   
-                                                    _id_emp,
-                                                    type,
-                                                    active,
-                                                    code,
-                                                    desc,
-                                                    #det_desc,
-                                                    sellprice,
-                                                    unit,
-                                                    unitcost,
-                                                    cat_id,
-                                                    useot                                    
-                                                    ])
-            id_serv = cursor.fetchone()
-            id_serv = id_serv[0] # Obtener el id cliente
-            # print(id_cliente)
-            _conexion.commit()
-            
-           
-        except Exception as e:
-            print("ERROR: {}".format(e))
-            with open (ruta_archivo, 'a') as archivo:
-                archivo.write("\nError al obtener ID de Cliente Proveedor desde la base de datos...")
-        
-        return id_serv
-'''
-'''def obtener_respuesta_get_services(_url, _item_por_pagina, _numero_pagina, _token):
-
-    url = _url.replace(":item_por_pagina", _item_por_pagina).replace(":numero_pagina", _numero_pagina)
-            
-    payload = {}
-
-    headers = {
-    'Authorization': 'Bearer {}'.format(_token)
-    }
-    response = requests.request("GET", url, headers=headers, data=payload)
-    #print("respuesta completa")
-    #print(response.json())
-    #print(url)
-    return response
-'''
-
-'''def obtener_lectura_get_services(_conexion):
-    try:
-        cursor = _conexion.cursor()
-        #cursor.callproc('fnc_defontana_obtener_lectura', [])
-        cursor.callproc('fn_defontana_obtener_lectura_get_services', [])
-        # print(cursor.fetchall()())        
-        return cursor.fetchall()
-        
-    except Exception as e:
-        print("ERROR: {}".format(e))
-        with open(ruta_archivo, 'a') as archivo:
-            archivo.write("Error al Obtener Lecturas desde la base de datos...")
-'''
-
-'''def insertar_servicios_de_empresas(_servicios_de_empresas_endpoints, cone):
-    #print("alo")
-    # referencia a items en respuesta
-    for endpoint in _servicios_de_empresas_endpoints:
-        id_emp = endpoint[0]
-        max_reintentos = endpoint[1]
-        url = endpoint[2]
-        item_por_pagina = endpoint[3]
-        numero_pagina = endpoint[4]
-        token = endpoint[5]
-        #print("id_:emopd",id_emp)
-               
-        respuesta_completa = obtener_respuesta_get_services(url,item_por_pagina,numero_pagina,token) #obtengo la lista de servicios a leer..
-        #print("rc",respuesta_completa.json())
-        for reintento in range(max_reintentos):                
-            flag = None
-           
-            if respuesta_completa.status_code == 200:
-                flag = True
-                break                
-            else: #respuesta no dio codigo 200..
-                items_totales = respuesta_completa.json()['totalItems']
-                cod_rpta = respuesta_completa.status_code
-                mensaje = respuesta_completa.json()['message']
-                """
-                print("{} | {} |  Reintento: {} | Código Respuesta: {} | Mensaje: {}\n".format(fecha_actual, reintento+1, cod_rpta, mensaje))
-        
-                with open(ruta_archivo, 'a') as archivo:
-                    archivo.write("{} | {} |  Reintento: {} | Código Respuesta: {} | Mensaje: {}\n".format(fecha_actual,  reintento+1, cod_rpta, mensaje))
-                """    
-        items_totales = 0
-        if flag:
-            #fecha_actual = datetime.now().strftime("%d-%m-%Y %H:%M:%S")#strftime("%Y-%m-%d %H:%M:%S")
-            fecha_actual = datetime.now().strftime("%d-%m-%Y %H:%M:%S.%f")
-            #print("Leyendo Empresa:",nombre_empresa[0])
-            items_totales = 0
-            
-            if respuesta_completa.json()['totalItems'] != 0 :
-                items_totales = respuesta_completa.json()['totalItems']
-            else : items_totales = 0
-            #print ("Filas Respuesta: ", items_totales) 
-            
-            #id_servicio = 
-            insertar_servicios_de_factura(id_emp,respuesta_completa.json(),cone) #insertar_saleList(respuesta_completa.json(), cone, id_emp)  
-            #print(id_servicio)
-'''
-
 def obtener_nombre_empresa(_conexion, _id_emp):
     try:
         cursor = _conexion.cursor()
@@ -904,23 +725,6 @@ def obtener_nombre_empresa(_conexion, _id_emp):
         print("ERROR: {}".format(e))    
         with open(ruta_archivo, 'a') as archivo:
             archivo.write("Error al Obtener Nombre de empresas desde la base de datos...")
-
-# Obtener lista de endpoint de facturas de ventas a leer para llamar a la respuesta
-#test1 deberia estar llamando a todos los métodos.
-'''def obtener_lectura_facturas_ventas(_conexion):
-    try:
-        cursor = _conexion.cursor()
-        #cursor.callproc('fnc_defontana_obtener_lectura', [])
-        cursor.callproc('fn_defontana_obtener_lectura_facturas_ventas', [])
-        # print(cursor.fetchall()())        
-        return cursor.fetchall()
-        
-    except Exception as e:
-        print("ERROR: {}".format(e))
-        with open(ruta_archivo, 'a') as archivo:
-            archivo.write("Error al Obtener Lecturas desde la base de datos...")
-
-'''
 
 # Obtener PDF de cada folio
 def obtener_b64_por_folio(_token,_folio): #con el token identifico en qué empresa estoy, con el folio busco el PDF
@@ -971,7 +775,7 @@ def obtener_xml_b64_por_folio(_token,_folio): #con el token identifico en qué e
     # Devolver None si "document" no está presente o es null
     return None
 
-#Insertar en bd pdf
+#Insertar en bd pdf de venta
 def insertar_pdf(_id_emp, _folio, _b64_pdf, _conexion):
     #print (_id_emp)
     #print (_folio)
@@ -997,7 +801,7 @@ def insertar_pdf(_id_emp, _folio, _b64_pdf, _conexion):
     
     return rpta_fn
 
-#Insertar en bd xml
+#Insertar en bd xml de venta
 def insertar_xml(_id_emp, _folio, _b64_pdf, _conexion):
     try:
         cursor = _conexion.cursor()
@@ -1018,39 +822,6 @@ def insertar_xml(_id_emp, _folio, _b64_pdf, _conexion):
         
     return rpta_fn
 
-#deprecado? repetido? idk
-'''# INSERTAR DATOS EN LOG GENERAL
-def insertar_datos_log(_conexion):
-    cursor = _conexion.cursor()
-    FCH_DATO_GENE = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-    
-    cursor.callproc("fn_log_insertar_datos", [
-        ID_SERVICIO_GENE,
-        FCH_DATO_GENE
-    ])
-    
-    _conexion.commit()
-    id_log = cursor.fetchone()
-    id_log = id_log[0]
-    
-    return id_log  
-
-# Actualizar datos del log en base de datos
-def actualizar_log(_conexion, _id_log, _fch_inicio_lect_log, _fch_fin_lect_log, _cant_lect_log, _ok_lect_log, _fail_lect_log, _coment_lect_log):
-    cursor = _conexion.cursor()
-    cursor.callproc("fn_log_actualizar_datos", [
-        _id_log,
-        _fch_inicio_lect_log,
-        _fch_fin_lect_log,
-        _cant_lect_log,
-        _ok_lect_log,
-        _fail_lect_log,
-        _coment_lect_log
-    ])
-    _conexion.commit()
-    id_log = cursor.fetchone()
-    id_log = id_log[0]
-'''
 # Insertar en log detalle de base de datos
 def insertar_datos_log_detalle_defontana(_conexion, _id_log, _status, _fch_dato_det, _fch_inicio_lect_det, 
                                          _fch_fin_lect_det, _cant_read, _cant_insert, _id_lectura, _cant_reintentos):
@@ -1069,7 +840,6 @@ def insertar_datos_log_detalle_defontana(_conexion, _id_log, _status, _fch_dato_
     _conexion.commit()
     id_log = cursor.fetchone()
     id_log = id_log[0]
-
 
 def formatear_rut(rut):
     '''# Ejemplo de uso:
@@ -1127,88 +897,6 @@ def insert_lista_para_tbl_clientes_proveedores_empresas(keys, connection):
     connection.commit()
     cursor.close()
     return rows_affected  
-
-
-### end new code
-
-
-def connection_database():
-    database = "OFINANCE"
-    user = "integrator"   
-    host = '192.168.149.20' 
-    password = "aZwY=d@tA79"
-    port = 5432
-
-    try:
-        conexion = psycopg2.connect(database=database, user=user, host=host, password=password, port=port)
-        #print(f"{datetime.now().strftime('%H:%M:%S %d/%m/%Y')} - Conexión a BD exitosa")
-        #print(f"{datetime.now().strftime('%H:%M:%S.%f')[:-3]} {datetime.now().strftime('%d/%m/%Y')} - Conexión a BD exitosa")
-        return conexion
-    except Exception as e:
-        print(f"{datetime.now().strftime('%H:%M:%S.%f')[:-3]} {datetime.now().strftime('%d/%m/%Y')} - Error de conexión a BD: {str(e)}")
-        return None
-   
-
-#funcional, pero deprecado:
-def obtener_lecturas_grupo_actual_sin_funcion_bd(conexion, _id_gpo):
-    cursor = conexion.cursor()
-    query = """
-    SELECT l.id_lectura, l.id_emp, l.max_reintentos, l.url, l.endpoint, l.item_por_pagina,
-            l.numero_pagina, l.token, g.id_gpo
-        FROM public.tbl_lecturas_defontana l
-        INNER JOIN tbl_grupos_lecturas g ON l.id_gpo = g.id_gpo
-        WHERE l.activo = true
-            and g.id_gpo = {}
-            and l.endpoint = 'get_caf'
-        ORDER BY l.id_emp, g.id_gpo, l.id_lectura;
-    """.format(_id_gpo)
-    ####QUITAR TESTEO DE LINEA ID GPO 15 and g.id_gpo = 15
-
-    #print ("query: "+query)
-    cursor.execute(query)
-    conexion.commit()
-
-    # Obtener los nombres de las columnas del resultado
-    column_names = [desc[0] for desc in cursor.description]
-
-    # Guardar los resultados en una lista con los mismos nombres de columna
-    x_por_leer = [dict(zip(column_names, row)) for row in cursor.fetchall()]
-
-    return x_por_leer
-#funcional, pero deprecado:
-def obtener_lecturas_por_grupo_sin_funcion_bd(conexion):
-
-    cursor = conexion.cursor()
-    query = """
-     SELECT l.id_lectura, l.id_emp, l.max_reintentos, l.url, l.endpoint, l.item_por_pagina,
-            l.numero_pagina, l.token, g.id_gpo
-        FROM public.tbl_lecturas_defontana l
-        INNER JOIN tbl_grupos_lecturas g ON l.id_gpo = g.id_gpo
-        WHERE l.activo = true
-        and l.endpoint = 'get_caf'
-         
-        ORDER BY l.id_emp, g.id_gpo, l.id_lectura;
-    """
-    #####
-    #QUITAR TESTEO DE ID GPO 15 and g.id_gpo = 15
-
-
-    cursor.execute(query)
-    lecturas_por_grupo = {}
-
-    for row in cursor.fetchall():
-        id_grupo_lectura = row[-1]  # Última columna es id_grupo_lectura
-        lectura = {}
-        for desc, value in zip(cursor.description, row):
-            lectura[desc.name] = value  # Usar desc.name como clave en el diccionario
-        # Crear la lista si aún no existe y agregar la lectura
-        if id_grupo_lectura not in lecturas_por_grupo:
-            lecturas_por_grupo[id_grupo_lectura] = []
-        lecturas_por_grupo[id_grupo_lectura].append(lectura)
-
-    return lecturas_por_grupo
-
-
 
 #con funcion en base de datos.
 def obtener_lecturas_por_grupo(conexion):
@@ -1283,6 +971,8 @@ def escribir_archivo_log(id_grupo_lectura, lecturas):
                 f"\tItem por página: {lectura['item_por_pagina']}\n"
                 f"\tMax Reintentos: {lectura['max_reintentos']}\n"
             )
+
+
 
 def manejar_grupo(id_grupo, tipos_lectura):
 #def manejar_grupo(id_grupo):
@@ -1582,7 +1272,7 @@ def procesar_caf(lectura, ruta_archivo, ID_LOG, hora_orquestado):
     if response.status_code == 200:
         data = response.json()
         if 'itemsCaf' in data:
-            conexion = connection_database()  # Asumiendo que tienes una función para conectarte a la base de datos
+            conexion = conexion_base_datos()#connection_database()  # Asumiendo que tienes una función para conectarte a la base de datos
             if not conexion:
                 print("Error al conectar a la base de datos")
                 return None
@@ -1692,7 +1382,7 @@ def cargar_tipos_lectura(id_serv):
     # para obtener los id_tipo_lect y su correspondiente nombre 
     # para el id_serv especificado.
 
-    conexion = connection_database()  # Conexión a la base de datos
+    conexion = conexion_base_datos()#connection_database()  # Conexión a la base de datos
     cursor = conexion.cursor()
     query = "SELECT id_tipo_lect, nom_lect FROM tbl_tipos_lecturas WHERE id_serv = %s"
     cursor.execute(query, (id_serv,))
@@ -1763,7 +1453,6 @@ def procesar_lectura(lectura, log_filename, ID_LOG, called_execution_time,tipos_
             with open(ruta_archivo, "a") as archivo:  
                 archivo.write(str(datetime.now())+f" | Fuera del horario permitido, id_lectura:  {lectura['id_lectura']}")
 
-
     else:
         print(f"Fuera de los días permitidos, id_lectura:  {lectura['id_lectura']}")
 
@@ -1782,7 +1471,7 @@ def procesar_grupo_obtener_lecturas(id_grupo,called_execution_time,tipos_lectura
     print ("Tiempo de orquestación.")
     print("called exec time: ", str(called_execution_time))
     try:
-        conexion = connection_database()
+        conexion = conexion_base_datos()#connection_database()
 
         if conexion:
             
@@ -1807,16 +1496,11 @@ def procesar_grupo_obtener_lecturas(id_grupo,called_execution_time,tipos_lectura
             #id logsuelo
             #testyeoeoeoeo
 
-
-
             # Proceso cada lectura y evaluo QUE ES
             for lectura in lecturas_grupo_actual:                
                 procesar_lectura(lectura, log_filename, ID_LOG, called_execution_time,tipos_lectura)
-
                 #procesar_lectura(lectura, log_filename, ID_LOG, called_execution_time)
-
                 #procesar_lectura(lectura, log_filename,called_execution_time)
-
                 #procesar_lectura(lectura, log_filename)#, ID_LOG)
 
     except Exception as e:
@@ -1941,7 +1625,7 @@ def insertar_datos_log_detalle_defontana(_conexion, _id_log, _status, _fch_dato_
 active_threads = {} 
 
 def main():
-    conexion = connection_database()
+    conexion = conexion_base_datos()#connection_database()
     if not conexion:
         sys.exit(1)
     
