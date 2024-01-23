@@ -126,16 +126,6 @@ def calcular_total_paginas(total_items, items_por_pagina):
 
 def obtener_respuesta_compra(_url, _item_por_pagina, _numero_pagina, _token, resta_mes_periodo):
     fecha_actual = datetime.now()
-    
-    #Fecha de Prueba 15/01/2025
-    #fecha_actual = datetime(2024, 1, 15)
-    #print("Fecha actual (de prueba):", fecha_actual) 
-
-    #print ("fch actual: " +str(fecha_actual))
-    #print ("resta mes periodo: "+str(resta_mes_periodo))
-
-    #hardcodeo para probrar que me lea un mes anterior.
-    #resta_mes_periodo = 1 
 
     if resta_mes_periodo == 0:
         # Uso de fechas actuales
@@ -176,7 +166,8 @@ def obtener_respuesta_compra(_url, _item_por_pagina, _numero_pagina, _token, res
         'Authorization': 'Bearer {}'.format(_token)
     }
     response = requests.request("GET", url, headers=headers, data=payload)
-    
+    #print ("response json obtener respuesta compra")
+    #print(response.json())
     return response
 
 def formatear_rut(rut):
@@ -237,13 +228,35 @@ def insert_lista_para_tbl_clientes_proveedores_empresas(keys, connection):
 
 
 def insertar_purchaseList(_respuesta, _conexion, _id_emp, _token):
-    #al parecer esta es la data
-    purchaseList = _respuesta['data'] #dentro del json 
-    #y tengo que entrar un nivel mas adentro aun
+   
+    purchaseList = _respuesta #dentro del json 
+
+    # Comprobar si 'data' está en purchaseList y si 'data' está dentro de ese 'data'
+    if 'data' in purchaseList and 'data' in purchaseList['data']:
+        purchaseData = purchaseList['data']['data']  # Lista que quieres iterar
+    else:
+        print("La estructura del JSON no es la esperada.")
+        return 0  # O manejar de otra manera
     
+    '''# Verificamos si la respuesta contiene 'data' y luego el segundo 'data' que es una lista
+    if 'data' in _respuesta and 'data' in _respuesta['data']:
+        purchaseList = _respuesta['data']['data']  # Accedemos al nivel correcto de 'data'
+        print("purchaseList")
+        print(purchaseList)
+    else:
+        print("La estructura del JSON no es la esperada.")
+        return 0  # O manejar de otra manera'''
+    
+    '''# Ya tienes la lista de compras directamente, no necesitas buscar 'data' nuevamente
+    print("purchaseList")
+    print(purchaseList)'''
+
+    # Imprimir para depurar
+    print("Contenido de purchaseList['data']: ", purchaseList['data'])
+
     filas_afectadas_total = 0 #facturas insertadas.
-    for purchase in purchaseList:
-        
+    
+    '''for purchase in purchaseList['data']:
         #mapeo de campos
         origin = purchase['origin']
         companyId = purchase['companyId']
@@ -282,37 +295,54 @@ def insertar_purchaseList(_respuesta, _conexion, _id_emp, _token):
         canReceipt = purchase['canReceipt']
         hasStockDocumentsRelated = purchase['hasStockDocumentsRelated']
         hasMenu = purchase['hasMenu']
-        originDescription = purchase['originDescription']
+        originDescription = purchase['originDescription']'''
       
         
-        # Datos dentro de attachedDocuments en JSON
-        '''attachedDocumentsDate = None
-        
-        attachedDocuments = saleList['attachedDocuments']'''
-
-        '''for attachedDocument in attachedDocuments:
-            #print(attachedDocumentsDate)
-            attachedDocumentsDate = attachedDocument['date']
-            attachedDocumentType = attachedDocument['attachedDocumentType']
-            attachedDocumentName = attachedDocument['attachedDocumentName']
-            attachedDocumentNumber = attachedDocument['attachedDocumentNumber']
-            attachedDocumentTotal = attachedDocument['attachedDocumentTotal']
-            attachedDocumentTotalDocumentTypeId = attachedDocument['documentTypeId']
-            attachedDocumentFolio = attachedDocument['folio']
-            attachedDocumentsReason = attachedDocument['reason']
-            attachedDocumentsGloss = attachedDocument['gloss']'''
-        
-
-        '''isTransferDocument = saleList['isTransferDocument']
-        if isTransferDocument != 'N':
-            print ("Es documento de traspaso!!!!!!!!!")
-            continue'''
-
-    
-        
         # buscar rut cliente en tbl_clientes_proveedores
-        rut_sin_dv = providerId[:-1].replace(".","").replace("-","") # quitar . - dv (punto guion y dv)
-        dv = providerId[-1]
+    for purchase in purchaseData:
+        # Mapeo de campos con .get() para evitar KeyError si una clave no existe
+        origin = purchase.get('origin', 'Valor por defecto si no existe')
+        companyId = purchase.get('companyId', 'Valor por defecto si no existe')
+        providerLegalCode = purchase.get('providerLegalCode', 'Valor por defecto si no existe')
+        providerName = purchase.get('providerName', 'Valor por defecto si no existe')
+        documentNumber = purchase.get('documentNumber', 'Valor por defecto si no existe')
+        documentType = purchase.get('documentType', 'Valor por defecto si no existe')
+        documentTotal = purchase.get('documentTotal', 'Valor por defecto si no existe')
+        documentEmissionDate = purchase.get('documentEmissionDate', 'Valor por defecto si no existe')
+        documentEntryType = purchase.get('documentEntryType', 'Valor por defecto si no existe')
+        documentPlatformId = purchase.get('documentPlatformId', 'Valor por defecto si no existe')
+        siiReceiptDate = purchase.get('siiReceiptDate', 'Valor por defecto si no existe')
+        lastStatus = purchase.get('lastStatus', 'Valor por defecto si no existe')
+        isIntegrated = purchase.get('isIntegrated', 'Valor por defecto si no existe')
+        isDigital = purchase.get('isDigital', 'Valor por defecto si no existe')
+        isReceived = purchase.get('isReceived', 'Valor por defecto si no existe')
+        providerId = purchase.get('providerId', 'Valor por defecto si no existe')
+        siiDocumentType = purchase.get('siiDocumentType', 'Valor por defecto si no existe')
+        documentTypeId = purchase.get('documentTypeId', 'Valor por defecto si no existe')
+        fiscalYear = purchase.get('fiscalYear', 'Valor por defecto si no existe')
+        voucherTypeId = purchase.get('voucherTypeId', 'Valor por defecto si no existe')
+        voucherNumber = purchase.get('voucherNumber', 'Valor por defecto si no existe')
+        accoutingBalance = purchase.get('accoutingBalance', 'Valor por defecto si no existe')
+        key = purchase.get('key', 'Valor por defecto si no existe')
+        canEdit = purchase.get('canEdit', 'Valor por defecto si no existe')
+        canRemove = purchase.get('canRemove', 'Valor por defecto si no existe')
+        deleteFailCondition = purchase.get('deleteFailCondition', 'Valor por defecto si no existe')
+        canFix = purchase.get('canFix', 'Valor por defecto si no existe')
+        canCancel = purchase.get('canCancel', 'Valor por defecto si no existe')
+        canReceive = purchase.get('canReceive', 'Valor por defecto si no existe')
+        canReject = purchase.get('canReject', 'Valor por defecto si no existe')
+        canLey19983 = purchase.get('canLey19983', 'Valor por defecto si no existe')
+        canGenericView = purchase.get('canGenericView', 'Valor por defecto si no existe')
+        canPreview = purchase.get('canPreview', 'Valor por defecto si no existe')
+        canPrint = purchase.get('canPrint', 'Valor por defecto si no existe')
+        canReceipt = purchase.get('canReceipt', 'Valor por defecto si no existe')
+        hasStockDocumentsRelated = purchase.get('hasStockDocumentsRelated', 'Valor por defecto si no existe')
+        hasMenu = purchase.get('hasMenu', 'Valor por defecto si no existe')
+        originDescription = purchase.get('originDescription', 'Valor por defecto si no existe')
+   
+
+        rut_sin_dv = providerLegalCode[:-1].replace(".","").replace("-","") # quitar . - dv (punto guion y dv)
+        dv = providerLegalCode[-1]
         id_proveedor = None
         
         #buscar e insertar cliente proveedor en la tabla d ela bd...
@@ -320,7 +350,7 @@ def insertar_purchaseList(_respuesta, _conexion, _id_emp, _token):
             cursor = _conexion.cursor()
             #cursor.callproc('fnc_defontana_bus_ins_cliprov', [
             cursor.callproc('fn_defontana_buscar_insertar_cliprov', [   
-                                                    providerId, 
+                                                    providerLegalCode, 
                                                     rut_sin_dv,
                                                     dv
                                             
@@ -416,12 +446,12 @@ def insertar_purchaseList(_respuesta, _conexion, _id_emp, _token):
                     archivo.write("\nError al insertar factura en la base de datos..")
 
             #esto no lo tiene actualmente las facturas de compra
-            details = purchaseList['details'] #items de cada factura...
+            # details = purchaseList['details'] #items de cada factura...
 
             #valor_retorno_detalle = 0 #para retornar el valor de detalles insertados, consultado despues...
            
             # Insertar detalles de ventas
-            if valor_retorno > 0: #si la factura se insertó, me insertará detalle...
+            '''if valor_retorno > 0: #si la factura se insertó, me insertará detalle...
                 
                 for detail in details: #recorro cada detalle..
                     detailLine = detail['detailLine']
@@ -524,14 +554,57 @@ def insertar_purchaseList(_respuesta, _conexion, _id_emp, _token):
                         print("Fallo la insercion de xml de factura.")
 
                     _conexion.commit()
-
+'''
      #factura insertada en bd..      
+    
     return filas_afectadas_total
 
 
+def obtener_nombre_empresa(_conexion, _id_emp):
+    try:
+        cursor = _conexion.cursor()
+       # cursor.callproc('fnc_defontana_obtener_nom_emp', [_id_emp])
+        cursor.callproc('fn_defontana_obtener_nom_emp', [_id_emp])
+        return cursor.fetchone()
+    except Exception as e:
+        print("ERROR: {}".format(e))    
+        with open(ruta_archivo, 'a') as archivo:
+            archivo.write("Error al Obtener Nombre de empresas desde la base de datos...")
 
+# Insertar en log detalle de base de datos
+def insertar_datos_log_detalle_defontana(_conexion, _id_log, _status, _fch_dato_det, _fch_inicio_lect_det, 
+                                         _fch_fin_lect_det, _cant_read, _cant_insert, _id_lectura, _cant_reintentos):
+    cursor = _conexion.cursor()
+    cursor.callproc("fn_log_detalle_insertar_datos_defontana", [
+        _id_log,
+        _status,
+        _fch_dato_det,
+        _fch_inicio_lect_det,
+        _fch_fin_lect_det,
+        _cant_read,
+        _cant_insert,
+        _id_lectura,
+        _cant_reintentos
+    ])
+    _conexion.commit()
+    id_log = cursor.fetchone()
+    id_log = id_log[0]
 
-
+# Actualizar datos del log en base de datos
+def actualizar_log(_conexion, _id_log, _fch_inicio_lect_log, _fch_fin_lect_log, _cant_lect_log, _ok_lect_log, _fail_lect_log, _coment_lect_log):
+    cursor = _conexion.cursor()
+    cursor.callproc("fn_log_actualizar_datos", [
+        _id_log,
+        _fch_inicio_lect_log,
+        _fch_fin_lect_log,
+        _cant_lect_log,
+        _ok_lect_log,
+        _fail_lect_log,
+        _coment_lect_log
+    ])
+    _conexion.commit()
+    id_log = cursor.fetchone()
+    id_log = id_log[0]
 
 def procesar_factura_compra(lectura, ruta_archivo, ID_LOG, hora_orquestado):
         #def procesar_factura_venta(lectura, ruta_archivo, ID_LOG):
@@ -557,7 +630,7 @@ def procesar_factura_compra(lectura, ruta_archivo, ID_LOG, hora_orquestado):
 
     ruta_archivo = log_filename
 
-    cone = connection_database() 
+    cone = conexion_base_datos()#connection_database() 
     if cone is None:
         print("ERROR BD")
         with open(ruta_archivo, "a") as archivo:                   
@@ -599,6 +672,7 @@ def procesar_factura_compra(lectura, ruta_archivo, ID_LOG, hora_orquestado):
 
             respuesta_inicial = obtener_respuesta_compra(url, item_por_pagina, numero_pagina, token, resta_mes_periodo)
             
+
             
      
             '''intento = 0
@@ -623,8 +697,17 @@ def procesar_factura_compra(lectura, ruta_archivo, ID_LOG, hora_orquestado):
                     #INICIO DE LECTURA
                     FCH_DATO_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
 
+                    #esto es en ventas, que se llama totalItems.
+                    #total_items = respuesta_inicial.json()['totalItems']
+                    # Verificamos si la respuesta contiene 'data' y luego 'recordsFiltered'
+                    respuesta_json = respuesta_inicial.json()
+                    if 'data' in respuesta_json and 'recordsFiltered' in respuesta_json['data']:
+                        total_items = respuesta_json['data']['recordsFiltered']
+                    else:
+                        print("La clave 'recordsFiltered' no se encuentra en la respuesta JSON")
+                        total_items = 0
 
-                    total_items = respuesta_inicial.json()['totalItems']
+
                     total_paginas = calcular_total_paginas(total_items, int(item_por_pagina))
                     
                     print ("total items recibido "+ str(total_items))
@@ -644,14 +727,22 @@ def procesar_factura_compra(lectura, ruta_archivo, ID_LOG, hora_orquestado):
                            
                             
                             # Accediendo a 'data' y luego a 'recordsTotal' dentro de la respuesta JSON
-                            items_totales = respuesta_completa.json()['data']['recordsTotal']
+                            items_totales = total_items#respuesta_completa.json()['data']['recordsTotal']
 
                             total_filas_leidas += items_totales  # Acumula el total de filas leídas
 
 
                             if items_totales > 0: #si hay al menos un registro, intento insertar a la tabla de rompimiento.-
 
-                                lista_tbl_clientes_proveedores_empresas_compras = lista_para_tbl_clientes_proveedores_empresas_compras(respuesta_completa.json()['saleList'], id_emp, cone)
+                                #lista_tbl_clientes_proveedores_empresas_compras = lista_para_tbl_clientes_proveedores_empresas_compras(respuesta_completa.json()['saleList'], id_emp, cone)
+                                # Verificamos si la respuesta contiene 'data' y luego el segundo 'data' que es una lista
+                                if 'data' in respuesta_json and 'data' in respuesta_json['data']:
+                                    lista_datos = respuesta_json['data']['data']  # Esta es la lista que contiene los datos
+
+                                    lista_tbl_clientes_proveedores_empresas_compras = lista_para_tbl_clientes_proveedores_empresas_compras(lista_datos, id_emp, cone)
+                                else:
+                                    print("La clave 'data' no se encuentra en la respuesta JSON o su estructura interna es diferente")
+                                    # Manejar el caso de que la estructura no sea la esperada
                                 
                                 filas_insertadas_tbl_cli_prov_emp = insert_lista_para_tbl_clientes_proveedores_empresas(lista_tbl_clientes_proveedores_empresas_compras, cone)
                         
@@ -660,10 +751,9 @@ def procesar_factura_compra(lectura, ruta_archivo, ID_LOG, hora_orquestado):
                                     with open(ruta_archivo, "a") as archivo:                   
                                         archivo.write( "\nNuevos Clientes en tbl_clientes_proveedores_empresas: "+str(filas_insertadas_tbl_cli_prov_emp+ "\n") )                      
                             
-                                #envío el token, porque lo ocupo para el pdf y xml..   
-                                
+
                                 #INSERTAR DATOS DE FACTURAS
-                                facturas_insertadas = insertar_purchaseList(respuesta_completa.json(), cone, id_emp, token)   
+                                facturas_insertadas = insertar_purchaseList(respuesta_json, cone, id_emp, token)   
                                 
                                 total_filas_insertadas += facturas_insertadas  # Acumula el total de filas insertadas
 
@@ -714,8 +804,6 @@ def procesar_factura_compra(lectura, ruta_archivo, ID_LOG, hora_orquestado):
                             print ("id_status_deta: " + str(ID_ESTATUS_DETA))
                             #ID_ESTATUS_DETA = RESPUESTA_ALERT #al menos una respuesta entró en error.
 
-                            #INSERCIÓN BD tabla tbl_log_detalle_sii
-                            #insert_log_det_fail = insertar_datos_log_detalle_defontana(cone, ID_LOG_DETA, ID_ESTATUS_DETA, FCH_DATO_DETA, FCH_INICIO_LECT_DETA, FCH_FIN_LECT_DETA, CANT_READ_DETA, CANT_INSERT_DETA, ID_LECTURA_DETA, CANT_REINTENTOS_DETA)
                             
                             #test1 16-11 19.28
                             insert_log_det_fail = insertar_datos_log_detalle_defontana(cone, ID_LOG_DETA, ID_ESTATUS_DETA, FCH_DATO_DETA, FCH_INICIO_LECT_DETA, FCH_FIN_LECT_DETA, total_filas_leidas, total_filas_insertadas, ID_LECTURA_DETA, CANT_REINTENTOS_DETA)
@@ -760,7 +848,7 @@ def procesar_factura_compra(lectura, ruta_archivo, ID_LOG, hora_orquestado):
             fail_lect = 0 #filas con fallas  
 
             with open(ruta_archivo, 'a') as archivo:
-                archivo.write("*** FIN LECTURA FACTURAS VENTAS: {} ***\n\n".format(fecha_actual) )   
+                archivo.write("*** FIN LECTURA FACTURAS COMPRAS: {} ***\n\n".format(fecha_actual) )   
             cone.commit()
             cone.close()                
 
@@ -777,3 +865,325 @@ def procesar_factura_compra(lectura, ruta_archivo, ID_LOG, hora_orquestado):
             error_msg = traceback.format_exc()
             print("Error:\n", error_msg)
   
+
+#con funcion en base de datos.
+def obtener_lecturas_por_grupo(conexion):
+    cursor = conexion.cursor()
+    try:
+        cursor.callproc('fn_defontana_listar_lecturas_por_grupo')
+        
+        #test 1 
+        #hardcodeado!
+        #cursor.callproc('fn_defontana_listar_lecturas_por_grupo_sologetcaf')
+        
+        # Ahora la función devuelve todas las filas como una lista de tuplas
+        filas = cursor.fetchall()
+        # Obtenemos los nombres de las columnas
+        column_names = [desc[0] for desc in cursor.description]
+        
+        lecturas_por_grupo = {}
+        for fila in filas:
+            # Convierte cada fila en un diccionario
+            lectura = dict(zip(column_names, fila))
+            # El ID del grupo está en la última columna (de acuerdo a tu estructura actual)
+            id_grupo_lectura = fila[-1]
+            
+            # Si aún no hay una entrada para este ID de grupo, crea una lista vacía
+            if id_grupo_lectura not in lecturas_por_grupo:
+                lecturas_por_grupo[id_grupo_lectura] = []
+            # Añade el diccionario de lectura a la lista de lecturas para este ID de grupo
+            lecturas_por_grupo[id_grupo_lectura].append(lectura)
+
+        return lecturas_por_grupo
+    except psycopg2.DatabaseError as e:
+        print(f"Database error: {e}")
+        return None
+    finally:
+        cursor.close()
+
+#con funcion en base de datos.
+def obtener_lecturas_grupo_actual(conexion, _id_gpo):
+    cursor = conexion.cursor()
+    try:
+        cursor.callproc('fn_defontana_listar_lecturas_grupo_actual', [_id_gpo])
+
+        lecturas = cursor.fetchall()
+        column_names = [desc[0] for desc in cursor.description]
+        return [dict(zip(column_names, row)) for row in lecturas]
+    except psycopg2.Error as e:
+        print(f"Database error: {e}")
+        return None
+    finally:
+        cursor.close()
+
+
+### Métodos para Logs.
+# INSERTAR DATOS EN LOG GENERAL
+
+def insertar_datos_log(_conexion, called_execution_time):  
+#def insertar_datos_log(_conexion):  
+    cursor = _conexion.cursor()
+    
+    #FCH_DATO_GENE = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+    # Añadir la fecha actual al tiempo
+    FCH_DATO_GENE = datetime.now().strftime('%Y-%m-%d ') + called_execution_time
+
+
+
+    cursor.callproc("fn_log_insertar_datos", [
+        ID_SERVICIO_GENE,
+        FCH_DATO_GENE
+    ])
+    
+    _conexion.commit()
+    id_log = cursor.fetchone()
+    id_log = id_log[0]
+    
+    return id_log  
+
+### escribe en txt del grupo:
+def escribir_archivo_log(id_grupo_lectura, lecturas):
+    #escribo en el log del grupo cada configuracion de lectura.
+    log_filename = os.path.join(log_directory, f"log_grupo_lectura_{id_grupo_lectura}.txt")
+    with open(log_filename, 'a') as log_file:
+        ahora = datetime.now()
+        cadena_fecha = ahora.strftime("%H:%M:%S.%f %d/%m/%Y")
+        log_file.write(f"\n--- Registro de lecturas a las {cadena_fecha} ---\n")
+        log_file.write(f"Cantidad de Endpoints: {len(lecturas)}\n")
+
+        for i, lectura in enumerate(lecturas, start=1):
+            log_file.write("Fecha y hora: "+cadena_fecha)
+            
+            log_file.write(
+                f"\nLectura {i}:\n"
+                f"\tId Lectura: {lectura['id_lectura']}\n"
+                f"\tId Empresa: {lectura['id_emp']}\n"
+                f"\tEndpoint: {lectura['endpoint']}\n"
+                f"\tUrl: {lectura['url']}\n"
+                f"\tItem por página: {lectura['item_por_pagina']}\n"
+                f"\tMax Reintentos: {lectura['max_reintentos']}\n"
+            )
+
+
+def procesar_lectura(lectura, log_filename, ID_LOG, called_execution_time,tipos_lectura):
+
+    #tipo_lectura = lectura['endpoint']  # Asumiendo que 'endpoint' contiene la información de tipo de factura
+    id_tipo_lectura = lectura['id_tipo_lect']
+
+    # Verificar si el id_tipo_lectura es válido
+    if id_tipo_lectura not in tipos_lectura:
+        print(f"Tipo de lectura desconocido no encontrado en tabla tbl_tipos_lecturas, id_lectura: {lectura['id_lectura']}")
+        
+        with open(ruta_archivo, "a") as archivo:                   
+            archivo.write(f"Tipo de lectura desconocido no encontrado en tabla tbl_tipos_lecturas, id_lectura: {lectura['id_lectura']}")
+        return
+    
+
+    # Obtener el día actual y la hora actual
+    hoy = datetime.now()
+    dia_actual = hoy.day
+    hora_actual = hoy.time()
+
+    #para validar si la lectura debe correr hoy
+    intervalo_inicio_numero_dia_on = lectura['intervalo_inicio_numero_dia_on']
+    intervalo_fin_numero_dia_on = lectura['intervalo_fin_numero_dia_on']
+    #para validar si la lectura debe correr en el rango de hora actual
+    intervalo_inicio_hora_on = lectura['intervalo_inicio_hora_on']
+    intervalo_fin_hora_on = lectura['intervalo_fin_hora_on']
+
+    # Comprobar si el día actual está dentro del rango permitido
+    if intervalo_inicio_numero_dia_on <= dia_actual <= intervalo_fin_numero_dia_on:
+        # Comprobar si la hora actual está dentro del rango permitido
+        if intervalo_inicio_hora_on <= hora_actual <= intervalo_fin_hora_on:
+       
+            '''if id_tipo_lectura == 5: 
+                procesar_factura_venta(lectura, ruta_archivo, ID_LOG, called_execution_time)
+            
+            elif id_tipo_lectura == 6:
+                procesar_caf(lectura, ruta_archivo, ID_LOG, called_execution_time)
+               ''' 
+            
+            #el
+            if id_tipo_lectura == 10:
+                #entre al tipo de lectura 10, es de compras
+                print("ID TIPO LECTURA 10 COMPRAS DEFONTANA")
+                procesar_factura_compra(lectura, ruta_archivo, ID_LOG, called_execution_time)
+            
+            
+
+            else:   
+                print(f"Tipo de factura desconocido, id_lectura:  {lectura['id_lectura']}")
+
+                with open(ruta_archivo, "a") as archivo:                   
+                    archivo.write( f"Tipo de lectura desconocido, id_lectura:  {lectura['id_lectura']}")
+        
+        else:
+            print(f"Fuera del horario permitido, id_lectura:  {lectura['id_lectura']}")
+
+            with open(ruta_archivo, "a") as archivo:  
+                archivo.write(str(datetime.now())+f" | Fuera del horario permitido, id_lectura:  {lectura['id_lectura']}")
+
+
+    else:
+        print(f"Fuera de los días permitidos, id_lectura:  {lectura['id_lectura']}")
+
+        with open(ruta_archivo, "a") as archivo:  
+            archivo.write(str(datetime.now())+f" | Fuera de los días permitidos, id_lectura:  {lectura['id_lectura']}")
+
+
+
+
+def procesar_grupo_obtener_lecturas(id_grupo,called_execution_time,tipos_lectura):
+#def procesar_grupo_obtener_lecturas(id_grupo):
+#def procesar_grupo_obtener_lecturas(id_grupo,called_execution_time):    
+
+    log_filename = os.path.join(log_directory, f"log_grupo_lectura_{id_grupo}.txt")
+    '''ahora = datetime.now()
+    cadena_fecha = ahora.strftime("%H:%M:%S.%f %d/%m/%Y")
+    '''
+    print ("Tiempo de orquestación.")
+    print("called exec time: ", str(called_execution_time))
+    try:
+        conexion = conexion_base_datos() #connection_database()
+
+        if conexion:
+            
+            #print ("ID LOG "+str(ID_LOG))
+            #ID_LOG = 999
+            #revisar en bd para que no arroje -1 never.
+            
+            lecturas_grupo_actual = obtener_lecturas_grupo_actual(conexion, id_grupo)
+
+            # escribo en el log cada lectura que haré secuencial.
+            escribir_archivo_log(id_grupo, lecturas_grupo_actual)
+
+
+            FCH_LOG= datetime.now().strftime('%Y-%m-%d ') + called_execution_time
+            #print("fch_log:" + str(FCH_LOG))
+
+            #ID_LOG = insertar_datos_log_caf(conexion, called_execution_time)
+            ID_LOG = insertar_datos_log(conexion, called_execution_time)
+            
+            print ("ID LOG: "+str(ID_LOG))
+           
+            #id logsuelo
+            #testyeoeoeoeo
+
+
+
+            # Proceso cada lectura y evaluo QUE ES
+            for lectura in lecturas_grupo_actual:                
+                procesar_lectura(lectura, log_filename, ID_LOG, called_execution_time,tipos_lectura)
+
+                #procesar_lectura(lectura, log_filename, ID_LOG, called_execution_time)
+
+                #procesar_lectura(lectura, log_filename,called_execution_time)
+
+                #procesar_lectura(lectura, log_filename)#, ID_LOG)
+
+    except Exception as e:
+        print(f"Error en grupo {id_grupo}: {str(e)}")
+        with open(log_filename, 'a') as log_file:
+            log_file.write("Error: " + str(e) + "\n")
+    finally:
+        if conexion:
+            conexion.close()     
+
+
+
+
+def manejar_grupo(id_grupo, tipos_lectura):
+#def manejar_grupo(id_grupo):
+    primera_ejecucion = True
+
+    while True:
+        ahora = datetime.now()
+
+        if primera_ejecucion:
+            # Para la primera ejecución, calcula el tiempo hasta el próximo minuto exacto
+            hora_ejecucion = (ahora + timedelta(minutes=1)).replace(second=0, microsecond=0)
+            primera_ejecucion = False
+        else:
+            # Para las ejecuciones subsiguientes, sigue el patrón basado en el ID del grupo
+            minutos_hasta_el_proximo_intervalo = id_grupo - (ahora.minute % id_grupo)
+            hora_ejecucion = (ahora + timedelta(minutes=minutos_hasta_el_proximo_intervalo)).replace(second=0, microsecond=0)
+
+        segundos_hasta_el_proximo_intervalo = (hora_ejecucion - ahora).total_seconds()
+
+        # Duerme la mayoría del tiempo
+        time.sleep(segundos_hasta_el_proximo_intervalo)
+        
+        # Ahora ejecuta el proceso
+        #procesar_grupo_obtener_lecturas(id_grupo)
+        #envio la hora de ejecucion para que sea todo más cool
+        #para ver en la hora que fue llamada una ejecución.-
+        called_execution_time = hora_ejecucion.strftime('%H:%M:%S')
+        
+        #procesar_grupo_obtener_lecturas(id_grupo,called_execution_time)
+        procesar_grupo_obtener_lecturas(id_grupo,called_execution_time,tipos_lectura)
+        
+        
+        print(f"Ejecutado proceso para el grupo {id_grupo} a las {hora_ejecucion.strftime('%H:%M:%S')}")
+
+def cargar_tipos_lectura(id_serv):
+    tipos_lectura = {}
+    # Conectar con la base de datos y ejecutar una consulta 
+    # para obtener los id_tipo_lect y su correspondiente nombre 
+    # para el id_serv especificado.
+
+    conexion = conexion_base_datos() #connection_database()  # Conexión a la base de datos
+    cursor = conexion.cursor()
+    query = "SELECT id_tipo_lect, nom_lect FROM tbl_tipos_lecturas WHERE id_serv = %s"
+    cursor.execute(query, (id_serv,))
+    
+    for id_tipo_lect, nom_lect in cursor.fetchall():
+        tipos_lectura[id_tipo_lect] = nom_lect
+
+    cursor.close()
+    conexion.close()
+
+    return tipos_lectura
+
+
+
+
+# Diccionario global para rastrear hilos activos por grupo
+active_threads = {} 
+
+def main():
+    conexion = conexion_base_datos() #Econnection_database()
+    if not conexion:
+        sys.exit(1)
+    
+    try:
+        # Obtener los grupos iniciales
+        lecturas_por_grupo = obtener_lecturas_por_grupo(conexion)
+        # Cuando busco los grupos iniciales, traer los grupos de lectura.
+
+        tipos_lectura = cargar_tipos_lectura(ID_SERVICIO_GENE)  # Cargar los tipos de lectura
+
+    except Exception as e:
+        print(f"Error obteniendo grupos: {str(e)}")
+        conexion.close()
+        sys.exit(1)
+    
+    conexion.close()
+
+    # Crear un hilo para cada grupo
+    for id_grupo in lecturas_por_grupo.keys():
+        # Verificar si ya hay un hilo activo para este grupo
+        if id_grupo in active_threads and active_threads[id_grupo].is_alive():
+            print(f"El hilo para el grupo {id_grupo} aún está en ejecución. Saltando...")
+            continue
+
+        #t = Thread(target=manejar_grupo, args=(id_grupo,))
+        t = Thread(target=manejar_grupo, args=(id_grupo, tipos_lectura))
+        
+        print(f"Lanzando hilo para el grupo {id_grupo}")
+        active_threads[id_grupo] = t
+        t.start()
+
+if __name__ == "__main__":
+    main()
+
+
