@@ -433,9 +433,12 @@ def insertar_purchaseList(_respuesta, _conexion, _id_emp, _token):
                 if valor_retorno == 0:
                     _conexion.rollback()
 
-                if valor_retorno == 2: #factura ya existe en bd, sumar a la variable que me cuenta las facturas en bd.
+                if valor_retorno == 1:
+                    filas_afectadas_total += valor_retorno 
+
+                '''if valor_retorno == 2: #factura ya existe en bd, sumar a la variable que me cuenta las facturas en bd.
                     f_e_bd = f_e_bd +1 
-                        
+                 '''       
                     
                 #_conexion.commit()   #forzar la insercion
                               
@@ -444,7 +447,7 @@ def insertar_purchaseList(_respuesta, _conexion, _id_emp, _token):
                 print("ERROR: {}".format(e))
                 with open (ruta_archivo, 'a') as archivo:
                     archivo.write("\nError al insertar factura en la base de datos..")
-
+                filas_afectadas_total = -1
             #esto no lo tiene actualmente las facturas de compra
             # details = purchaseList['details'] #items de cada factura...
 
@@ -557,6 +560,8 @@ def insertar_purchaseList(_respuesta, _conexion, _id_emp, _token):
 '''
      #factura insertada en bd..      
     
+    print ("filas afectadas total:")
+    print (filas_afectadas_total)
     return filas_afectadas_total
 
 

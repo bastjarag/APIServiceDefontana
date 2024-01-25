@@ -234,6 +234,54 @@ def obtener_respuesta(_url, _item_por_pagina, _numero_pagina, _token, resta_mes_
     
     return response
 
+def obtener_respuesta_compra(_url, _item_por_pagina, _numero_pagina, _token, resta_mes_periodo):
+    fecha_actual = datetime.now()
+
+    if resta_mes_periodo == 0:
+        # Uso de fechas actuales
+        fecha_inicio = fecha_actual.replace(day=1)
+        fecha_fin = fecha_actual
+    else:        
+        #print("Resta mes periodo: "+str(resta_mes_periodo))
+
+        # Calculando el primer día del mes anterior y el último día de ese mes
+        primer_dia_mes_anterior = fecha_actual.replace(day=1) - timedelta(days=1)
+        primer_dia_mes_anterior = primer_dia_mes_anterior.replace(day=1, month=primer_dia_mes_anterior.month - resta_mes_periodo + 1)
+        
+        # Ajustar año y mes para el último día del mes anterior
+        mes_siguiente = primer_dia_mes_anterior.month + 1
+        anio_siguiente = primer_dia_mes_anterior.year
+        
+        if mes_siguiente > 12: #En el caso que estemos en Diciembre.
+            mes_siguiente = 1
+            anio_siguiente += 1
+
+        ultimo_dia_mes_anterior = datetime(anio_siguiente, mes_siguiente, 1) - timedelta(days=1)
+
+        fecha_inicio = primer_dia_mes_anterior
+        fecha_fin = ultimo_dia_mes_anterior
+
+        #print("fecha_inicio: " + str(fecha_inicio) + "| fecha_fin: " + str(fecha_fin) )
+
+    # Convertir las fechas a formato de cadena "YYYY-MM-DD"
+    fecha_inicio_str = fecha_inicio.strftime("%Y-%m-%d")
+    fecha_fin_str = fecha_fin.strftime("%Y-%m-%d")
+
+    # Construir la URL con las fechas correspondientes
+    url = _url.replace(":fch_inicio", fecha_inicio_str).replace(":fch_fin", fecha_fin_str).replace(":item_por_pagina", _item_por_pagina).replace(":numero_pagina", _numero_pagina)
+
+    # Resto del código para realizar la solicitud HTTP...
+    payload = {}
+    headers = {
+        'Authorization': 'Bearer {}'.format(_token)
+    }
+    response = requests.request("GET", url, headers=headers, data=payload)
+    #print ("response json obtener respuesta compra")
+    #print(response.json())
+    return response
+
+
+
 
 
 def insertar_saleList(_respuesta, _conexion, _id_emp, _token):
@@ -695,7 +743,7 @@ def obtener_clientes_por_empresa(_token): #con el token identifico en qué empre
     return response
 
 # Insertar o actualizar datos de Clientes de Cada planta
-def insertar_actualizar_datos_usuario(_respuesta, _conexion):
+def actualizar_datos_usuario(_respuesta, _conexion):
     clientList = _respuesta['clientList']
     filas_afectadas_total = 0 #clientes actualizados o insertado
     for cliente in clientList:        
@@ -722,8 +770,8 @@ def insertar_actualizar_datos_usuario(_respuesta, _conexion):
         try:
             cursor = _conexion.cursor()
            
-            cursor.callproc('fn_defontana_insertar_actualizar_datos_cliente', [   
-                                                    rut,
+            cursor.callproc('fn_defontana_actualizar_datos_cliente', [   
+                                                    #rut,
                                                     direccion,
                                                     ciudad,
                                                     rubro,
@@ -1018,39 +1066,6 @@ def insertar_xml(_id_emp, _folio, _b64_pdf, _conexion):
         
     return rpta_fn
 
-#deprecado? repetido? idk
-'''# INSERTAR DATOS EN LOG GENERAL
-def insertar_datos_log(_conexion):
-    cursor = _conexion.cursor()
-    FCH_DATO_GENE = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-    
-    cursor.callproc("fn_log_insertar_datos", [
-        ID_SERVICIO_GENE,
-        FCH_DATO_GENE
-    ])
-    
-    _conexion.commit()
-    id_log = cursor.fetchone()
-    id_log = id_log[0]
-    
-    return id_log  
-
-# Actualizar datos del log en base de datos
-def actualizar_log(_conexion, _id_log, _fch_inicio_lect_log, _fch_fin_lect_log, _cant_lect_log, _ok_lect_log, _fail_lect_log, _coment_lect_log):
-    cursor = _conexion.cursor()
-    cursor.callproc("fn_log_actualizar_datos", [
-        _id_log,
-        _fch_inicio_lect_log,
-        _fch_fin_lect_log,
-        _cant_lect_log,
-        _ok_lect_log,
-        _fail_lect_log,
-        _coment_lect_log
-    ])
-    _conexion.commit()
-    id_log = cursor.fetchone()
-    id_log = id_log[0]
-'''
 # Insertar en log detalle de base de datos
 def insertar_datos_log_detalle_defontana(_conexion, _id_log, _status, _fch_dato_det, _fch_inicio_lect_det, 
                                          _fch_fin_lect_det, _cant_read, _cant_insert, _id_lectura, _cant_reintentos):
@@ -1070,12 +1085,8 @@ def insertar_datos_log_detalle_defontana(_conexion, _id_log, _status, _fch_dato_
     id_log = cursor.fetchone()
     id_log = id_log[0]
 
-
 def formatear_rut(rut):
-    '''# Ejemplo de uso:
-    rut = "76.708.710-1"
-    rut_formateado = formatear_rut(rut)
-    print(rut_formateado)  # Esto imprimirá "76708710"'''
+
     # Eliminar puntos y guiones y obtener solo los números y el dígito verificador
     rut_formateado = ''.join(filter(str.isdigit, rut))
 
@@ -1098,6 +1109,8 @@ def obtener_id_cliprov(rut, _conexion):
     else:
         return None
     
+
+###para ventas
 def lista_para_tbl_clientes_proveedores_empresas(json_data, id_emp, _conexion):
     id_tipo_cliprov = 1  #en BD: tbl_tipos_clientes_proveedores: 1 = Cliente, 2 = Proveedor
     
@@ -1116,7 +1129,7 @@ def lista_para_tbl_clientes_proveedores_empresas(json_data, id_emp, _conexion):
                 lista_cli_prov_emp.append((id_cliprov, id_emp, id_tipo_cliprov))
     
     return lista_cli_prov_emp
-
+###para ventas
 def insert_lista_para_tbl_clientes_proveedores_empresas(keys, connection):
     cursor = connection.cursor()
     rows_affected = 0
@@ -1129,10 +1142,31 @@ def insert_lista_para_tbl_clientes_proveedores_empresas(keys, connection):
     return rows_affected  
 
 
+###para compras
+def lista_para_tbl_clientes_proveedores_empresas_compras(json_data, id_emp, _conexion):
+    id_tipo_cliprov = 2  #en BD: tbl_tipos_clientes_proveedores: 1 = Cliente, 2 = Proveedor
+    
+    lista_cli_prov_emp = []
+
+    for data_item in json_data:
+        rut = data_item.get("providerId")  # Obtener el rut del elemento JSON (ESTÁ CON PUNTOS Y GUION)
+        
+        if rut:
+            rut_formateado = formatear_rut(rut) #pasa de rut con puntos guion y dv. A: sin puntos y sin dv.
+            id_cliprov = obtener_id_cliprov(rut_formateado, _conexion)
+
+            if id_cliprov is not None:
+                # Agregar una tupla con los valores a la lista
+                lista_cli_prov_emp.append((id_cliprov, id_emp, id_tipo_cliprov))
+    
+    return lista_cli_prov_emp
+
+
+
 ### end new code
 
 
-def connection_database():
+'''def connection_database():
     database = "OFINANCE"
     user = "integrator"   
     host = '192.168.149.20' 
@@ -1147,7 +1181,7 @@ def connection_database():
     except Exception as e:
         print(f"{datetime.now().strftime('%H:%M:%S.%f')[:-3]} {datetime.now().strftime('%d/%m/%Y')} - Error de conexión a BD: {str(e)}")
         return None
-   
+   '''
 
 #funcional, pero deprecado:
 def obtener_lecturas_grupo_actual_sin_funcion_bd(conexion, _id_gpo):
@@ -1341,7 +1375,7 @@ def procesar_factura_venta(lectura, ruta_archivo, ID_LOG, hora_orquestado):
 
     ruta_archivo = log_filename
 
-    cone = connection_database() 
+    cone = conexion_base_datos()#connection_database() 
     if cone is None:
         print("ERROR BD")
         with open(ruta_archivo, "a") as archivo:                   
@@ -1382,9 +1416,7 @@ def procesar_factura_venta(lectura, ruta_archivo, ID_LOG, hora_orquestado):
             # Llamada inicial para obtener el total de páginas            
             #respuesta_inicial = obtener_respuesta(url, item_por_pagina, numero_pagina, token)
             respuesta_inicial = obtener_respuesta(url, item_por_pagina, numero_pagina, token, resta_mes_periodo)
-            
-            
-     
+   
             '''intento = 0
             for intento in range(max_reintentos):
                 print ("Intento: "+str(intento))
@@ -1545,21 +1577,445 @@ def procesar_factura_venta(lectura, ruta_archivo, ID_LOG, hora_orquestado):
                 archivo.write("*** FIN LECTURA FACTURAS VENTAS: {} ***\n\n".format(fecha_actual) )   
             cone.commit()
             cone.close()                
-
-          
-            # ...
-            
+       
+            # ...         
             #print("fin main") 
-
-
-
 
         except Exception as e:
             import traceback
             error_msg = traceback.format_exc()
             print("Error:\n", error_msg)
     
+def insertar_purchaseList(_respuesta, _conexion, _id_emp, _token):
+   
+    purchaseList = _respuesta #dentro del json 
 
+    # Comprobar si 'data' está en purchaseList y si 'data' está dentro de ese 'data'
+    if 'data' in purchaseList and 'data' in purchaseList['data']:
+        purchaseData = purchaseList['data']['data']  # Lista que quieres iterar
+    else:
+        print("La estructura del JSON no es la esperada.")
+        return 0  # O manejar de otra manera
+    
+    # Imprimir para depurar
+    #print("Contenido de purchaseList['data']: ", purchaseList['data'])
+
+    filas_afectadas_total = 0 #facturas insertadas.
+    
+
+    for purchase in purchaseData:
+        # Mapeo de campos con .get() para evitar KeyError si una clave no existe
+        origin = purchase.get('origin', 'Valor por defecto si no existe')
+        companyId = purchase.get('companyId', 'Valor por defecto si no existe')
+        providerLegalCode = purchase.get('providerLegalCode', 'Valor por defecto si no existe')
+        providerName = purchase.get('providerName', 'Valor por defecto si no existe')
+        documentNumber = purchase.get('documentNumber', 'Valor por defecto si no existe')
+        documentType = purchase.get('documentType', 'Valor por defecto si no existe')
+        documentTotal = purchase.get('documentTotal', 'Valor por defecto si no existe')
+        documentEmissionDate = purchase.get('documentEmissionDate', 'Valor por defecto si no existe')
+        documentEntryType = purchase.get('documentEntryType', 'Valor por defecto si no existe')
+        documentPlatformId = purchase.get('documentPlatformId', 'Valor por defecto si no existe')
+        siiReceiptDate = purchase.get('siiReceiptDate', 'Valor por defecto si no existe')
+        lastStatus = purchase.get('lastStatus', 'Valor por defecto si no existe')
+        isIntegrated = purchase.get('isIntegrated', 'Valor por defecto si no existe')
+        isDigital = purchase.get('isDigital', 'Valor por defecto si no existe')
+        isReceived = purchase.get('isReceived', 'Valor por defecto si no existe')
+        providerId = purchase.get('providerId', 'Valor por defecto si no existe')
+        siiDocumentType = purchase.get('siiDocumentType', 'Valor por defecto si no existe')
+        documentTypeId = purchase.get('documentTypeId', 'Valor por defecto si no existe')
+        fiscalYear = purchase.get('fiscalYear', 'Valor por defecto si no existe')
+        voucherTypeId = purchase.get('voucherTypeId', 'Valor por defecto si no existe')
+        voucherNumber = purchase.get('voucherNumber', 'Valor por defecto si no existe')
+        accoutingBalance = purchase.get('accoutingBalance', 'Valor por defecto si no existe')
+        key = purchase.get('key', 'Valor por defecto si no existe')
+        canEdit = purchase.get('canEdit', 'Valor por defecto si no existe')
+        canRemove = purchase.get('canRemove', 'Valor por defecto si no existe')
+        deleteFailCondition = purchase.get('deleteFailCondition', 'Valor por defecto si no existe')
+        canFix = purchase.get('canFix', 'Valor por defecto si no existe')
+        canCancel = purchase.get('canCancel', 'Valor por defecto si no existe')
+        canReceive = purchase.get('canReceive', 'Valor por defecto si no existe')
+        canReject = purchase.get('canReject', 'Valor por defecto si no existe')
+        canLey19983 = purchase.get('canLey19983', 'Valor por defecto si no existe')
+        canGenericView = purchase.get('canGenericView', 'Valor por defecto si no existe')
+        canPreview = purchase.get('canPreview', 'Valor por defecto si no existe')
+        canPrint = purchase.get('canPrint', 'Valor por defecto si no existe')
+        canReceipt = purchase.get('canReceipt', 'Valor por defecto si no existe')
+        hasStockDocumentsRelated = purchase.get('hasStockDocumentsRelated', 'Valor por defecto si no existe')
+        hasMenu = purchase.get('hasMenu', 'Valor por defecto si no existe')
+        originDescription = purchase.get('originDescription', 'Valor por defecto si no existe')
+   
+
+        rut_sin_dv = providerLegalCode[:-1].replace(".","").replace("-","") # quitar . - dv (punto guion y dv)
+        dv = providerLegalCode[-1]
+        id_proveedor = None
+        
+        #buscar e insertar cliente proveedor en la tabla d ela bd...
+        try:
+            cursor = _conexion.cursor()
+            #cursor.callproc('fnc_defontana_bus_ins_cliprov', [
+            cursor.callproc('fn_defontana_buscar_insertar_cliprov', [   
+                                                    providerLegalCode, 
+                                                    rut_sin_dv,
+                                                    dv
+                                            
+                                                    ])
+            id_proveedor = cursor.fetchone()
+            id_proveedor = id_proveedor[0] # Obtener el id cliente
+           
+            if id_proveedor == 0: 
+                _conexion.rollback()
+             
+        except Exception as e:
+            _conexion.rollback()
+            print("ERROR: {}".format(e))
+            with open (ruta_archivo, 'a') as archivo:
+                archivo.write("\nError al obtener ID de Cliente Proveedor desde la base de datos...")
+            
+    
+        if id_proveedor > 0:
+            try:
+            # print("dentro de factrura vendta....")
+                fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                cursor = _conexion.cursor()
+                #cursor.callproc('fnc_defontana_ins_ventas_b', [
+
+                cursor.callproc('fn_defontana_insertar_factura_compra', [                                                            
+                                                        _id_emp,
+                                                        id_proveedor,
+                                                        fecha_actual,
+                                                        #### 1am 23-1-24
+                                                        origin,
+                                                        companyId,
+                                                        providerLegalCode,
+                                                        providerName,
+                                                        documentNumber,
+                                                        documentType,
+                                                        documentTotal,
+                                                        documentEmissionDate,
+                                                        documentEntryType,
+                                                        documentPlatformId,
+                                                        siiReceiptDate,
+                                                        lastStatus,
+                                                        isIntegrated,
+                                                        isDigital,
+                                                        isReceived,
+                                                        providerId,
+                                                        siiDocumentType,
+                                                        documentTypeId,
+                                                        fiscalYear,
+                                                        voucherTypeId,
+                                                        voucherNumber,
+                                                        accoutingBalance,
+                                                        key,
+                                                        canEdit,
+                                                        canRemove,
+                                                        deleteFailCondition,
+                                                        canFix,
+                                                        canCancel,
+                                                        canReceive,
+                                                        canReject,
+                                                        canLey19983,
+                                                        canGenericView,
+                                                        canPreview,
+                                                        canPrint,
+                                                        canReceipt,
+                                                        hasStockDocumentsRelated,
+                                                        hasMenu,
+                                                        originDescription,
+                                                        #### 1am 23-1-24
+                                                        
+                                                        ])
+                
+                resultado = cursor.fetchone()# Recupera el valor de retorno de la función.                
+                valor_retorno = resultado[0]
+                
+                #probar que inserte facturas...
+                print("*"*20)
+                print("factura: ",documentNumber)
+                print("insertó factura: ",valor_retorno)
+                
+                if valor_retorno == 0:
+                    _conexion.rollback()
+
+                if valor_retorno == 1:
+                    filas_afectadas_total += valor_retorno 
+
+                '''if valor_retorno == 2: #factura ya existe en bd, sumar a la variable que me cuenta las facturas en bd.
+                    f_e_bd = f_e_bd +1 
+                 '''       
+                    
+                #_conexion.commit()   #forzar la insercion
+                              
+            except Exception as e:
+                _conexion.rollback()
+                print("ERROR: {}".format(e))
+                with open (ruta_archivo, 'a') as archivo:
+                    archivo.write("\nError al insertar factura en la base de datos..")
+                filas_afectadas_total = -1
+            #esto no lo tiene actualmente las facturas de compra
+            # details = purchaseList['details'] #items de cada factura...
+
+            #valor_retorno_detalle = 0 #para retornar el valor de detalles insertados, consultado despues...
+           
+
+     #factura insertada en bd..      
+    
+    print ("filas afectadas total:")
+    print (filas_afectadas_total)
+    return filas_afectadas_total
+
+
+def procesar_factura_compra(lectura, ruta_archivo, ID_LOG, hora_orquestado):
+        #def procesar_factura_venta(lectura, ruta_archivo, ID_LOG):
+    fch_actual = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+    #print ("Entre a procesar_factura_venta a las "+fch_actual)
+
+    id_lectura = lectura['id_lectura']
+   
+    ID_LECTURA_DETA = id_lectura
+
+    id_emp = lectura['id_emp']
+    max_reintentos = lectura['max_reintentos']
+    url = lectura['url']
+    endpoint = lectura['endpoint']
+    item_por_pagina = lectura['item_por_pagina']
+    numero_pagina = lectura['numero_pagina']
+    token = lectura['token']
+    id_gpo = lectura['id_gpo']
+
+    resta_mes_periodo = lectura['resta_mes_periodo']   
+
+    log_filename = os.path.join(log_directory, f"log_grupo_lectura_{id_gpo}.txt")
+
+    ruta_archivo = log_filename
+
+    cone = conexion_base_datos()#connection_database() 
+    if cone is None:
+        print("ERROR BD")
+        with open(ruta_archivo, "a") as archivo:                   
+            archivo.write( "\n***** ERROR CONEXIÓN BD!!!!: "+str(datetime.now())+" de COMPRAS SII:")
+    else:
+        
+        try:
+            fecha_actual = datetime.now().strftime("%d-%m-%Y %H:%M:%S.%f")
+            #print ("Testeo")
+
+            OK_LECT_GENE = 0
+            FAIL_LECT_GENE = 0
+
+            ID_LECTURA_DETA = id_lectura
+
+            ID_ESTATUS_DETA = INICIO_OK
+
+            ID_LOG_DETA = ID_LOG
+
+            MENSAJE_COMPLETO_GEN = 'Ok'
+
+            #FCH_INICIO_LECT_GENE = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+            FCH_INICIO_LECT_GENE = datetime.now().strftime('%Y-%m-%d ') + hora_orquestado# fch_dato en tbl_log
+            #print ("fch inicio lect:"+ str(FCH_INICIO_LECT_GENE))
+
+            ID_ESTATUS_DETA = ENDPOINTS_OK
+
+            nombre_empresa = obtener_nombre_empresa(cone, id_emp)
+
+            total_filas_leidas = 0
+            total_filas_insertadas = 0
+
+            CANT_REINTENTOS_DETA = 1
+
+            '''CANT_LECT_GENE = len(endpoints_por_leer)
+            ID_LOG_DETA = insertar_datos_log(cone)'''
+
+            # Llamada inicial para obtener el total de páginas            
+
+            respuesta_inicial = obtener_respuesta_compra(url, item_por_pagina, numero_pagina, token, resta_mes_periodo)
+            
+            '''intento = 0
+            for intento in range(max_reintentos):
+                print ("Intento: "+str(intento))
+                 
+                #guardo el reintento que me tiró datos
+                CANT_REINTENTOS_DETA_ventas = intento
+                
+                FCH_INICIO_LECT_DETA_ventas = datetime.now().strftime("%d-%m-%Y %H:%M:%S") '''
+           
+            FCH_INICIO_LECT_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
+            #test1
+            print ("FCH_INICIO_LECT_DETA: "+ str(FCH_INICIO_LECT_DETA) )
+
+
+            contador = 1
+
+            if respuesta_inicial.status_code == 200:
+                    MENSAJE_COMPLETO_GEN = ''
+                    
+                    #INICIO DE LECTURA
+                    FCH_DATO_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
+
+                    #esto es en ventas, que se llama totalItems.
+                    #total_items = respuesta_inicial.json()['totalItems']
+                    # Verificamos si la respuesta contiene 'data' y luego 'recordsFiltered'
+                    respuesta_json = respuesta_inicial.json()
+                    if 'data' in respuesta_json and 'recordsFiltered' in respuesta_json['data']:
+                        total_items = respuesta_json['data']['recordsFiltered']
+                    else:
+                        print("La clave 'recordsFiltered' no se encuentra en la respuesta JSON")
+                        total_items = 0
+
+
+                    total_paginas = calcular_total_paginas(total_items, int(item_por_pagina))
+                    
+                    print ("total items recibido "+ str(total_items))
+                    print ("total paginas a recorrer "+ str(total_paginas))
+
+                    # Procesa cada página
+                    for numero_pagina_actual in range(1, total_paginas + 1):
+                        #print ("entre a procesar paginas")
+                        print ("num pag actual: " + str(numero_pagina_actual))
+
+                        #respuesta_completa = obtener_respuesta(url, item_por_pagina, str(numero_pagina_actual), token)
+                        respuesta_completa = obtener_respuesta_compra(url, item_por_pagina, str(numero_pagina_actual), token, resta_mes_periodo)
+
+
+                        # Aquí comienza la lógica de procesamiento de respuesta_completa
+                        if respuesta_completa.status_code == 200:
+                           
+                            
+                            # Accediendo a 'data' y luego a 'recordsTotal' dentro de la respuesta JSON
+                            items_totales = total_items#respuesta_completa.json()['data']['recordsTotal']
+
+                            total_filas_leidas += items_totales  # Acumula el total de filas leídas
+
+
+                            if items_totales > 0: #si hay al menos un registro, intento insertar a la tabla de rompimiento.-
+
+                                #lista_tbl_clientes_proveedores_empresas_compras = lista_para_tbl_clientes_proveedores_empresas_compras(respuesta_completa.json()['saleList'], id_emp, cone)
+                                # Verificamos si la respuesta contiene 'data' y luego el segundo 'data' que es una lista
+                                if 'data' in respuesta_json and 'data' in respuesta_json['data']:
+                                    lista_datos = respuesta_json['data']['data']  # Esta es la lista que contiene los datos
+
+                                    lista_tbl_clientes_proveedores_empresas_compras = lista_para_tbl_clientes_proveedores_empresas_compras(lista_datos, id_emp, cone)
+                                else:
+                                    print("La clave 'data' no se encuentra en la respuesta JSON o su estructura interna es diferente")
+                                    # Manejar el caso de que la estructura no sea la esperada
+                                
+                                filas_insertadas_tbl_cli_prov_emp = insert_lista_para_tbl_clientes_proveedores_empresas(lista_tbl_clientes_proveedores_empresas_compras, cone)
+                        
+                                if filas_insertadas_tbl_cli_prov_emp > 1 :
+                                    print("Nuevos Clientes en tbl_clientes_proveedores_empresas: "+str(filas_insertadas_tbl_cli_prov_emp))
+                                    with open(ruta_archivo, "a") as archivo:                   
+                                        archivo.write( "\nNuevos Clientes en tbl_clientes_proveedores_empresas: "+str(filas_insertadas_tbl_cli_prov_emp+ "\n") )                      
+                            
+
+                                #INSERTAR DATOS DE FACTURAS
+                                facturas_insertadas = insertar_purchaseList(respuesta_json, cone, id_emp, token)   
+                                
+                                total_filas_insertadas += facturas_insertadas  # Acumula el total de filas insertadas
+
+
+                                cod_rpta = respuesta_completa.status_code
+                                mensaje = respuesta_completa.json()['message']
+
+
+                                with open (ruta_archivo, 'a') as archivo:
+                                    archivo.write("{} | Página {} | {} | Filas Insertadas: {} | Filas Respuesta: {}  | Código Respuesta {} | {} \n".format(fecha_actual,numero_pagina_actual, nombre_empresa[0],facturas_insertadas,items_totales, cod_rpta, mensaje) )   
+                                contador += 1
+                                print("{} | Página {} | {} | Filas Insertadas: {} | Filas Respuesta: {}  | Código Respuesta {} | {} \n".format(fecha_actual, numero_pagina_actual, nombre_empresa[0],facturas_insertadas,items_totales, cod_rpta, mensaje) )   
+                            
+
+                                CANT_READ_DETA = items_totales
+                                CANT_INSERT_DETA = facturas_insertadas
+                                FCH_DATO_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
+                                FCH_FIN_LECT_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+                                
+                                #ID_ESTATUS_DETA = RESPUESTA_OK 
+                                ID_ESTATUS_DETA = FIN_OK
+                                
+                                #esto debo areglarlo para que el total de lecturas tambien se sume.
+                                OK_LECT_GENE += 1
+                                print ("*****")
+
+                                pass
+                            
+
+                        else:
+                            CANT_REINTENTOS_DETA += 1 #se suma un reintento.
+
+                            MENSAJE_COMPLETO_GEN = 'Error'
+
+                            print("Error en respuesta..") #romper la actulizacion lectura.
+                            # Fecha actual
+                            '''fecha_actual_str = datetime.now().strftime("%d-%m-%Y %H:%M:%S")    
+
+                            ventas_insertadas = 0
+                            filas_afectadas = 0'''
+
+                            FCH_DATO_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
+                            FCH_FIN_LECT_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
+                            CANT_READ_DETA = 0
+                            CANT_INSERT_DETA = 0
+                            
+                            ID_ESTATUS_DETA = RESPUESTA_FAIL
+                            print ("id_status_deta: " + str(ID_ESTATUS_DETA))
+                            #ID_ESTATUS_DETA = RESPUESTA_ALERT #al menos una respuesta entró en error.
+
+                            
+                            #test1 16-11 19.28
+                            insert_log_det_fail = insertar_datos_log_detalle_defontana(cone, ID_LOG_DETA, ID_ESTATUS_DETA, FCH_DATO_DETA, FCH_INICIO_LECT_DETA, FCH_FIN_LECT_DETA, total_filas_leidas, total_filas_insertadas, ID_LECTURA_DETA, CANT_REINTENTOS_DETA)
+                           
+                            print ("insert log det fail: ",str(insert_log_det_fail))
+                            FAIL_LECT_GENE += 1
+                     
+                    ID_ESTATUS_DETA = FIN_OK
+                   # FCH_DATO_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
+
+                    FCH_FIN_LECT_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
+
+                    # Inserción de un único registro de detalle después de procesar todas las páginas
+                    insert_log_detalle_ok = insertar_datos_log_detalle_defontana(cone, ID_LOG_DETA, ID_ESTATUS_DETA, FCH_DATO_DETA, FCH_INICIO_LECT_DETA, FCH_FIN_LECT_DETA, total_filas_leidas, total_filas_insertadas, ID_LECTURA_DETA, CANT_REINTENTOS_DETA)
+                    #print("insert log det ok: ", str(insert_log_detalle_ok))
+
+                            
+            else :
+                MENSAJE_COMPLETO_GEN = 'Error'
+
+            #aqui finalizar la lectura del log.
+            #fecha_actual = datetime.now().strftime("%d-%m-%Y %H:%M:%S")#strftime("%Y-%m-%d %H:%M:%S")
+            fecha_fin = datetime.now().strftime("%d-%m-%Y %H:%M:%S.%f")
+
+            # Fecha actual
+            fecha_actual_str = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+
+            COMENT_LECT_GENE = MENSAJE_COMPLETO_GEN
+
+            if FAIL_LECT_GENE == CANT_LECT_GENE:
+                COMENT_LECT_GENE = "API CON FALLA TOTAL"
+            #else:
+            #    COMENT_LECT_GENE = "TERMINADO OK"
+            
+            FCH_FIN_LECT_GENE = datetime.now().strftime("%d-%m-%Y %H:%M:%S")  
+
+            # actualizar datos de tbl_log
+            actualizar_log(cone, ID_LOG_DETA, FCH_INICIO_LECT_GENE, FCH_FIN_LECT_GENE, CANT_LECT_GENE, OK_LECT_GENE, FAIL_LECT_GENE, COMENT_LECT_GENE)
+
+            cant_lect = 0 #filas totales
+            ok_lect  = 0 #filas insertadas
+            fail_lect = 0 #filas con fallas  
+
+            with open(ruta_archivo, 'a') as archivo:
+                archivo.write("*** FIN LECTURA FACTURAS COMPRAS: {} ***\n\n".format(fecha_actual) )   
+            cone.commit()
+            cone.close()                
+            # ...
+            
+            #print("fin main") 
+
+        except Exception as e:
+            import traceback
+            error_msg = traceback.format_exc()
+            print("Error:\n", error_msg)
+  
 
 def procesar_caf(lectura, ruta_archivo, ID_LOG, hora_orquestado):
     #print ("entre al procesar caf")
@@ -1582,7 +2038,7 @@ def procesar_caf(lectura, ruta_archivo, ID_LOG, hora_orquestado):
     if response.status_code == 200:
         data = response.json()
         if 'itemsCaf' in data:
-            conexion = connection_database()  # Asumiendo que tienes una función para conectarte a la base de datos
+            conexion = conexion_base_datos() #connection_database()  # Asumiendo que tienes una función para conectarte a la base de datos
             if not conexion:
                 print("Error al conectar a la base de datos")
                 return None
@@ -1692,7 +2148,7 @@ def cargar_tipos_lectura(id_serv):
     # para obtener los id_tipo_lect y su correspondiente nombre 
     # para el id_serv especificado.
 
-    conexion = connection_database()  # Conexión a la base de datos
+    conexion = conexion_base_datos() #connection_database()  # Conexión a la base de datos
     cursor = conexion.cursor()
     query = "SELECT id_tipo_lect, nom_lect FROM tbl_tipos_lecturas WHERE id_serv = %s"
     cursor.execute(query, (id_serv,))
@@ -1706,10 +2162,6 @@ def cargar_tipos_lectura(id_serv):
     return tipos_lectura
 
 
-#def procesar_lectura(lectura, log_filename, ID_LOG, called_execution_time):
-#def procesar_lectura(lectura, ruta_archivo,ID_LOG):    
-#def procesar_lectura(lectura, ruta_archivo, called_execution_time):
-#def procesar_lectura(lectura, ruta_archivo):
 
 def procesar_lectura(lectura, log_filename, ID_LOG, called_execution_time,tipos_lectura):
 
@@ -1753,6 +2205,13 @@ def procesar_lectura(lectura, log_filename, ID_LOG, called_execution_time,tipos_
                 #procesar_caf(lectura, ruta_archivo, ID_LOG)
                 procesar_caf(lectura, ruta_archivo, ID_LOG, called_execution_time)
                 #print("id_tipo_lectura: "+str(id_tipo_lectura))
+
+            elif id_tipo_lectura == 10:
+                #entre al tipo de lectura 10, es de compras
+                #print("ID TIPO LECTURA 10 COMPRAS DEFONTANA")
+                procesar_factura_compra(lectura, ruta_archivo, ID_LOG, called_execution_time)
+            
+            
             
             else:   
                 print(f"Tipo de factura desconocido, id_lectura:  {lectura['id_lectura']}")
@@ -1785,7 +2244,7 @@ def procesar_grupo_obtener_lecturas(id_grupo,called_execution_time,tipos_lectura
     print ("Tiempo de orquestación.")
     print("called exec time: ", str(called_execution_time))
     try:
-        conexion = connection_database()
+        conexion = conexion_base_datos() #connection_database()
 
         if conexion:
             
@@ -1805,21 +2264,14 @@ def procesar_grupo_obtener_lecturas(id_grupo,called_execution_time,tipos_lectura
             #ID_LOG = insertar_datos_log_caf(conexion, called_execution_time)
             ID_LOG = insertar_datos_log(conexion, called_execution_time)
             
-            print ("ID LOG: "+str(ID_LOG))
-           
-            #id logsuelo
-            #testyeoeoeoeo
-
-
+            #print ("ID LOG: "+str(ID_LOG))
 
             # Proceso cada lectura y evaluo QUE ES
             for lectura in lecturas_grupo_actual:                
                 procesar_lectura(lectura, log_filename, ID_LOG, called_execution_time,tipos_lectura)
 
                 #procesar_lectura(lectura, log_filename, ID_LOG, called_execution_time)
-
                 #procesar_lectura(lectura, log_filename,called_execution_time)
-
                 #procesar_lectura(lectura, log_filename)#, ID_LOG)
 
     except Exception as e:
@@ -1939,15 +2391,13 @@ def insertar_datos_log_detalle_defontana(_conexion, _id_log, _status, _fch_dato_
 
 # Fin insertar en log detalle de base de datos
 
-
 # Diccionario global para rastrear hilos activos por grupo
 active_threads = {} 
 
 def main():
-    conexion = connection_database()
+    conexion = conexion_base_datos() #connection_database()
     if not conexion:
         sys.exit(1)
-    
     try:
         # Obtener los grupos iniciales
         lecturas_por_grupo = obtener_lecturas_por_grupo(conexion)
