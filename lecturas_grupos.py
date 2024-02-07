@@ -7,11 +7,9 @@ import json
 import pandas as pd
 import requests
 from datetime import datetime, timedelta
-
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 from base64 import b64decode
-
 import math
 
 # Configuración txt LOG
@@ -192,6 +190,8 @@ def obtener_respuesta(_url, _item_por_pagina, _numero_pagina, _token, resta_mes_
     #hardcodeo para probrar que me lea un mes anterior.
     #resta_mes_periodo = 1 
 
+
+
     if resta_mes_periodo == 0:
         # Uso de fechas actuales
         fecha_inicio = fecha_actual.replace(day=1)
@@ -281,7 +281,16 @@ def obtener_respuesta_compra(_url, _item_por_pagina, _numero_pagina, _token, res
     return response
 
 
-
+#### actualizar fch_update factura
+def actualizar_factura_fch_update(conexion, num_doc_venta, id_emp):
+    try:
+        cursor = conexion.cursor()
+        cursor.callproc('fn_defontana_actualizar_factura_fch_update', [num_doc_venta, id_emp])
+        conexion.commit()  # Asegura que los cambios se guarden incluso si luego haces un rollback
+        print("fch_update actualizado exitosamente para num_doc_venta:", num_doc_venta)
+    except Exception as e:
+        print("Error al actualizar fch_update:", e)
+####
 
 
 def insertar_saleList(_respuesta, _conexion, _id_emp, _token):
@@ -411,11 +420,13 @@ def insertar_saleList(_respuesta, _conexion, _id_emp, _token):
             with open (ruta_archivo, 'a') as archivo:
                 archivo.write("\nError al obtener ID de Cliente Proveedor desde la base de datos...")
             
-        
         #print("antes de insertar en facturas de venta.s...")   
         # Insertar datos en tbl_datos_defontana_ventas
         if id_cliente > 0:
             try:
+                # Actualizar fch_update si la factura ya existe
+                actualizar_factura_fch_update(_conexion, voucherInfoFolio, _id_emp)
+        
             # print("dentro de factrura vendta....")
                 fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 cursor = _conexion.cursor()
@@ -476,16 +487,10 @@ def insertar_saleList(_respuesta, _conexion, _id_emp, _token):
                 print("*"*20)
                 print("factura: ",voucherInfoFolio)
                 print("insertó factura: ",valor_retorno)
-                
-                
+                     
                 if valor_retorno == 0:
                     _conexion.rollback()
 
-                if valor_retorno == 2: #factura ya existe en bd, sumar a la variable que me cuenta las facturas en bd.
-                    f_e_bd = f_e_bd +1 
-                        
-                    
-                #_conexion.commit()   #forzar la insercion
                               
             except Exception as e:
                 _conexion.rollback()
@@ -493,12 +498,9 @@ def insertar_saleList(_respuesta, _conexion, _id_emp, _token):
                 with open (ruta_archivo, 'a') as archivo:
                     archivo.write("\nError al insertar factura en la base de datos..")
 
-
             details = saleList['details'] #items de cada factura...
 
             valor_retorno_detalle = 0 #para retornar el valor de detalles insertados, consultado despues...
-           
-           
            
             # Insertar detalles de ventas
             if valor_retorno > 0: #si la factura se insertó, me insertará detalle...
@@ -564,22 +566,6 @@ def insertar_saleList(_respuesta, _conexion, _id_emp, _token):
                 if valor_retorno_detalle > 0: #se insertó el detalle, insertaré ahora los b64...
                     #ahora voy a insertar b64 de pdf y xml...
 
-                    #insertar pdf por folio, y empresa:
-                    #testeo para el 14-11.-
-                    '''try:
-                        #testeo.
-                        #print("id emp",_id_emp)
-                        #print("folio", voucherInfoFolio)
-                        b64 = obtener_b64_por_folio(_token,voucherInfoFolio)
-                        #print("*"*20)
-                        rpta_pdf = insertar_pdf(_id_emp, voucherInfoFolio, b64, _conexion)
-                        print("Insertó pdf:",rpta_pdf)
-                        if rpta_pdf < 0 : #retorna -1 en caso de error...
-                            _conexion.rollback()
-                    except Exception as e:
-                        _conexion.rollback()
-                        print("Fallo la insercion de factura.") '''     
-
                     try:
           
                         b64 = obtener_b64_por_folio(_token, voucherInfoFolio)                        
@@ -599,25 +585,7 @@ def insertar_saleList(_respuesta, _conexion, _id_emp, _token):
                         print("Fallo la inserción de factura:", e)
 
 
-
                     #insertar xml por folio y empresa...
-
-                    #deprecado:
-
-                    '''try:
-                        if rpta_pdf > 0:
-                            xml_b64 = obtener_xml_b64_por_folio(_token,voucherInfoFolio)   
-                            rpta_xml = insertar_xml(_id_emp, voucherInfoFolio, xml_b64, _conexion)
-                            print ("Insertó xml:", rpta_xml)
-                            filas_afectadas_total +=  rpta_xml #AQUI ES CUANDO INSERTO EL REGISTRO ENTERO
-
-                            if rpta_xml < 0 : #retorna -1 en caso de error...
-                                _conexion.rollback()
-                    except Exception as e:
-                        _conexion.rollback()
-                        print("Fallo la insercion de xml de factura.")     
-
-                    _conexion.commit() ''' 
                     try:
                         if rpta_pdf > 0:
                             xml_b64 = obtener_xml_b64_por_folio(_token, voucherInfoFolio)
@@ -1141,7 +1109,6 @@ def insert_lista_para_tbl_clientes_proveedores_empresas(keys, connection):
     cursor.close()
     return rows_affected  
 
-
 ###para compras
 def lista_para_tbl_clientes_proveedores_empresas_compras(json_data, id_emp, _conexion):
     id_tipo_cliprov = 2  #en BD: tbl_tipos_clientes_proveedores: 1 = Cliente, 2 = Proveedor
@@ -1162,8 +1129,6 @@ def lista_para_tbl_clientes_proveedores_empresas_compras(json_data, id_emp, _con
     return lista_cli_prov_emp
 
 
-
-### end new code
 
 
 '''def connection_database():
@@ -1351,8 +1316,20 @@ def manejar_grupo(id_grupo, tipos_lectura):
         
         print(f"Ejecutado proceso para el grupo {id_grupo} a las {hora_ejecucion.strftime('%H:%M:%S')}")
 
+ 
+def calcular_periodo(resta_mes_periodo):
+    hoy = datetime.now()
+    if resta_mes_periodo > 0:
+        primer_dia_periodo = (hoy.replace(day=1) - timedelta(days=1)).replace(day=1) - timedelta(days=resta_mes_periodo*30)
+        ultimo_dia_periodo = hoy.replace(day=1) - timedelta(days=1)
+    else:
+        primer_dia_periodo = hoy.replace(day=1)
+        ultimo_dia_periodo = hoy
+    return primer_dia_periodo, ultimo_dia_periodo
+
+
 def procesar_factura_venta(lectura, ruta_archivo, ID_LOG, hora_orquestado):
-        #def procesar_factura_venta(lectura, ruta_archivo, ID_LOG):
+#def procesar_factura_venta(lectura, ruta_archivo, ID_LOG):
     fch_actual = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     #print ("Entre a procesar_factura_venta a las "+fch_actual)
 
@@ -1369,11 +1346,17 @@ def procesar_factura_venta(lectura, ruta_archivo, ID_LOG, hora_orquestado):
     token = lectura['token']
     id_gpo = lectura['id_gpo']
 
-    resta_mes_periodo = lectura['resta_mes_periodo']   
+    resta_mes_periodo = lectura['resta_mes_periodo']  
+
+    #resta_mes_periodo = 1
 
     log_filename = os.path.join(log_directory, f"log_grupo_lectura_{id_gpo}.txt")
 
     ruta_archivo = log_filename
+
+    #num_doc_venta_list = [] #lista para validar estatus de facturas (para revisar que hayan sido eliminadas con posterioridad a leerlas.)    
+    #primer_dia_periodo, ultimo_dia_periodo = calcular_periodo(lectura['resta_mes_periodo'])
+    
 
     cone = conexion_base_datos()#connection_database() 
     if cone is None:
@@ -1457,6 +1440,12 @@ def procesar_factura_venta(lectura, ruta_archivo, ID_LOG, hora_orquestado):
 
                         # Aquí comienza la lógica de procesamiento de respuesta_completa
                         if respuesta_completa.status_code == 200:
+                            #test code
+                            ####para revisar el estatus de la factura
+                            #for venta in respuesta_completa.json()['saleList']:
+                            #    for voucher in venta['voucherInfo']:
+                            #        num_doc_venta_list.append(voucher['folio'])
+                            #####para revisar estatus de las facturas
                            
                             items_totales = respuesta_completa.json()['totalItems']
 
@@ -1542,9 +1531,18 @@ def procesar_factura_venta(lectura, ruta_archivo, ID_LOG, hora_orquestado):
 
                     FCH_FIN_LECT_DETA = datetime.now().strftime("%d-%m-%Y %H:%M:%S") 
 
+
+                    # Antes de finalizar y cerrar la conexión, actualizamos las facturas
+                    ####actualizar_estatus_facturas(num_doc_venta_list, lectura['id_emp'], cone, primer_dia_periodo, ultimo_dia_periodo)
+                    ###test 06/2/24
+
+
+
                     # Inserción de un único registro de detalle después de procesar todas las páginas
                     insert_log_detalle_ok = insertar_datos_log_detalle_defontana(cone, ID_LOG_DETA, ID_ESTATUS_DETA, FCH_DATO_DETA, FCH_INICIO_LECT_DETA, FCH_FIN_LECT_DETA, total_filas_leidas, total_filas_insertadas, ID_LECTURA_DETA, CANT_REINTENTOS_DETA)
                     #print("insert log det ok: ", str(insert_log_detalle_ok))
+
+                    
 
                             
             else :
@@ -1572,6 +1570,10 @@ def procesar_factura_venta(lectura, ruta_archivo, ID_LOG, hora_orquestado):
             cant_lect = 0 #filas totales
             ok_lect  = 0 #filas insertadas
             fail_lect = 0 #filas con fallas  
+
+            # Antes de finalizar y cerrar la conexión, actualizamos las facturas
+            #actualizar_estatus_facturas(cone, num_doc_venta_list, lectura['id_emp'], primer_dia_periodo, ultimo_dia_periodo)
+    
 
             with open(ruta_archivo, 'a') as archivo:
                 archivo.write("*** FIN LECTURA FACTURAS VENTAS: {} ***\n\n".format(fecha_actual) )   
