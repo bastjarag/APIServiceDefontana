@@ -126,7 +126,7 @@ def calcular_total_paginas(total_items, items_por_pagina):
 #llamada de facturas de ventas
 #def obtener_respuesta(_url, _item_por_pagina, _numero_pagina, _token):
 
-def old_fashionedobtener_respuesta_old_fashioned(_url, _item_por_pagina, _numero_pagina, _token,resta_mes_periodo):
+'''def old_fashionedobtener_respuesta_old_fashioned(_url, _item_por_pagina, _numero_pagina, _token,resta_mes_periodo):
 
     # Obtener la fecha actual en formato de cadena "YYYY-MM-DD"
     fecha_actual_str = datetime.now().strftime("%Y-%m-%d")
@@ -143,14 +143,7 @@ def old_fashionedobtener_respuesta_old_fashioned(_url, _item_por_pagina, _numero
     #fecha_5_dias_atras = fecha_actual - timedelta(days=5)
 
     #codigo deprecado..
-    '''#Fecha 5 días atras
-    fecha_5_dias_atras = fecha_actual - timedelta(days=30)
-    # Convertir la fecha de 5 días atrás en formato de cadena "YYYY-MM-DD"
-    fecha_5_dias_atras_str = fecha_5_dias_atras.strftime("%Y-%m-%d")
-    # reemplazar or lectura máxima 5 días atras....
-    #fecha_5_dias_atras_str = "2023-08-01"
-    #fecha_5_dias_atras_str = "2023-09-01"'''
-    #fin codigo deprecado, para que sea desde principio de mes en ves de solo 5 dias atras.
+
 
 
     # Obtener el primer día del mes actual
@@ -175,6 +168,7 @@ def old_fashionedobtener_respuesta_old_fashioned(_url, _item_por_pagina, _numero
     #print("respuesta completa")
     #print(response.json())
     return response
+'''
 
 #parchado para que funcione como mes entero anterior, considerando diciembre y enero.
 def obtener_respuesta(_url, _item_por_pagina, _numero_pagina, _token, resta_mes_periodo):
@@ -186,31 +180,31 @@ def obtener_respuesta(_url, _item_por_pagina, _numero_pagina, _token, resta_mes_
 
     #print ("fch actual: " +str(fecha_actual))
     #print ("resta mes periodo: "+str(resta_mes_periodo))
-
-    #hardcodeo para probrar que me lea un mes anterior.
-    #resta_mes_periodo = 1 
-
-
+    
+    # Hardcodeo para probar que me lea un mes anterior.
+    #resta_mes_periodo = 3
 
     if resta_mes_periodo == 0:
         # Uso de fechas actuales
         fecha_inicio = fecha_actual.replace(day=1)
         fecha_fin = fecha_actual
-    else:        
-        #print("Resta mes periodo: "+str(resta_mes_periodo))
-
+    else:
         # Calculando el primer día del mes anterior y el último día de ese mes
         primer_dia_mes_anterior = fecha_actual.replace(day=1) - timedelta(days=1)
-        primer_dia_mes_anterior = primer_dia_mes_anterior.replace(day=1, month=primer_dia_mes_anterior.month - resta_mes_periodo + 1)
         
-        # Ajustar año y mes para el último día del mes anterior
-        mes_siguiente = primer_dia_mes_anterior.month + 1
-        anio_siguiente = primer_dia_mes_anterior.year
+        # Ajuste para considerar resta_mes_periodo correctamente
+        mes_resultante = primer_dia_mes_anterior.month - resta_mes_periodo + 1
+        anio_ajuste = (mes_resultante - 1) // 12  # Esto será negativo si mes_resultante es negativo
+        mes_final = mes_resultante % 12 if mes_resultante % 12 != 0 else 12
+        anio_final = primer_dia_mes_anterior.year + anio_ajuste
         
-        if mes_siguiente > 12: #En el caso que estemos en Diciembre.
-            mes_siguiente = 1
-            anio_siguiente += 1
-
+        primer_dia_mes_anterior = datetime(anio_final, mes_final, 1)
+        
+        # Ajustar año y mes para el último día del mes
+        mes_siguiente = mes_final + 1
+        anio_siguiente = anio_final if mes_siguiente <= 12 else anio_final + 1
+        mes_siguiente = 1 if mes_siguiente > 12 else mes_siguiente
+        
         ultimo_dia_mes_anterior = datetime(anio_siguiente, mes_siguiente, 1) - timedelta(days=1)
 
         fecha_inicio = primer_dia_mes_anterior
@@ -237,25 +231,30 @@ def obtener_respuesta(_url, _item_por_pagina, _numero_pagina, _token, resta_mes_
 def obtener_respuesta_compra(_url, _item_por_pagina, _numero_pagina, _token, resta_mes_periodo):
     fecha_actual = datetime.now()
 
+    # Hardcodeo para probar que me lea un mes anterior.
+    #resta_mes_periodo = 3
+
     if resta_mes_periodo == 0:
         # Uso de fechas actuales
         fecha_inicio = fecha_actual.replace(day=1)
         fecha_fin = fecha_actual
-    else:        
-        #print("Resta mes periodo: "+str(resta_mes_periodo))
-
+    else:
         # Calculando el primer día del mes anterior y el último día de ese mes
         primer_dia_mes_anterior = fecha_actual.replace(day=1) - timedelta(days=1)
-        primer_dia_mes_anterior = primer_dia_mes_anterior.replace(day=1, month=primer_dia_mes_anterior.month - resta_mes_periodo + 1)
         
-        # Ajustar año y mes para el último día del mes anterior
-        mes_siguiente = primer_dia_mes_anterior.month + 1
-        anio_siguiente = primer_dia_mes_anterior.year
+        # Ajuste para considerar resta_mes_periodo correctamente
+        mes_resultante = primer_dia_mes_anterior.month - resta_mes_periodo + 1
+        anio_ajuste = (mes_resultante - 1) // 12  # Esto será negativo si mes_resultante es negativo
+        mes_final = mes_resultante % 12 if mes_resultante % 12 != 0 else 12
+        anio_final = primer_dia_mes_anterior.year + anio_ajuste
         
-        if mes_siguiente > 12: #En el caso que estemos en Diciembre.
-            mes_siguiente = 1
-            anio_siguiente += 1
-
+        primer_dia_mes_anterior = datetime(anio_final, mes_final, 1)
+        
+        # Ajustar año y mes para el último día del mes
+        mes_siguiente = mes_final + 1
+        anio_siguiente = anio_final if mes_siguiente <= 12 else anio_final + 1
+        mes_siguiente = 1 if mes_siguiente > 12 else mes_siguiente
+        
         ultimo_dia_mes_anterior = datetime(anio_siguiente, mes_siguiente, 1) - timedelta(days=1)
 
         fecha_inicio = primer_dia_mes_anterior
@@ -279,6 +278,130 @@ def obtener_respuesta_compra(_url, _item_por_pagina, _numero_pagina, _token, res
     #print ("response json obtener respuesta compra")
     #print(response.json())
     return response
+
+###auth empresas
+def obtener_respuesta_auth_empresa():
+    #Para obtener un nuevo token diario
+    print ("a")
+
+'''def obtener_lecturas_auth_token(conexion):
+    cursor = conexion.cursor()
+    try:
+        cursor.callproc('fn_defontana_obtener_lecturas_auth_token')
+
+        lecturas = cursor.fetchall()
+        column_names = [desc[0] for desc in cursor.description]
+        return [dict(zip(column_names, row)) for row in lecturas]
+    except psycopg2.Error as e:
+        print(f"Database error: {e}")
+        return None
+    finally:
+        cursor.close()'''
+
+
+def actualizar_token_auth_en_bd(conexion, id_emp, new_token):
+    #print ("metodo actualizar_token_auth_en_bd ")
+    cursor = conexion.cursor()
+    try:
+        #print ("entre al try de actualizar_token_auth_en_bd   ")
+        cursor.callproc('fn_defontana_actualizar_token_auth', [id_emp, new_token])
+        conexion.commit()
+       
+    except psycopg2.Error as e:
+        print(f"Database error al actualizar token: {e}")
+        conexion.rollback()
+    finally:
+        cursor.close()
+
+
+'''def obtener_nuevo_token(conexion, id_emp):
+    # Obtener las credenciales para la llamada de autenticación
+    lecturas = obtener_lecturas_auth_token(conexion)
+    for lectura in lecturas:
+        if lectura['id_emp'] == id_emp:
+            try:
+                response = requests.get(lectura['url'], headers={"client": lectura['client'], "company": lectura['company'], "user": lectura['auth_user'], "password": lectura['auth_password']})
+                if response.status_code == 200:
+                    data = response.json()
+                    new_token = data.get('access_token', None)
+                    if new_token:
+                        actualizar_token_auth_en_bd(conexion, id_emp, new_token)
+                        return new_token
+            except Exception as e:
+                print(f"Error al obtener nuevo token: {e}")
+    return None'''
+
+
+#con funcion en base de datos.
+def obtener_lecturas_auth_token(conexion):
+    cursor = conexion.cursor()
+    try:
+        cursor.callproc('fn_defontana_obtener_lecturas_auth_token')
+
+        lecturas = cursor.fetchall()
+        column_names = [desc[0] for desc in cursor.description]
+        return [dict(zip(column_names, row)) for row in lecturas]
+    except psycopg2.Error as e:
+        print(f"Database error obteniendo lecturas de auth token.: {e}")
+        return None
+    finally:
+        cursor.close()
+
+
+
+def obtener_insertar_token_auth_empresa(conexion,lectura):
+    
+    id_emp = str(lectura['id_emp'])
+    _url = str(lectura['url'])
+    client = str(lectura['client'])
+    company = str(lectura['company'])
+    user = str(lectura['auth_user'])
+    password = str(lectura['auth_password'])
+
+    try:
+        #https://api.defontana.com/api/auth?client=:client&company=:company&user=:user&password=:password
+
+        # Construir la URL con las fechas correspondientes
+        url = _url.replace(":client", client).replace(":company", company).replace(":user", user).replace(":password", password)
+
+        # Resto del código para realizar la solicitud HTTP...
+        payload = {}
+        headers={"client": client, "company": company, "user": user, "password": password}
+        # Realizar la solicitud de autenticación para obtener el nuevo token
+        response = requests.request("GET", url, headers=headers, data=payload)
+
+        #print(f"Response status code: {response.status_code}")  # Imprime el código de estado de la respuesta
+        
+        if response.status_code == 200:
+            '''print ("url" + url)
+            print ("client:" + client)
+            print ("company:" + company)
+            print ("user:" + user)
+            print ("password:" + password)'''
+
+            data = response.json()
+            #print(f"Response data: {data}")  # Imprime los datos de la respuesta
+
+            new_token = data.get('access_token', None)
+
+            #print ("new_token "+str(new_token))
+            if new_token:
+                #print ("entre al if del new token.")
+                # Actualizar el token en la base de datos
+                actualizar_token_auth_en_bd(conexion, id_emp, new_token)
+                #print (new_token[:15])
+                return new_token
+            else:
+                print(f"Login failed: {data.get('message')}")
+        else:
+            print(f"Error HTTP: {response.status_code} - {response.text}")  # Imprime información de error de HTTP
+
+    except Exception as e:
+        print(f"Error al obtener nuevo token para la empresa {id_emp}: {e}")
+
+    return None
+###auth auth auth
+
 
 
 #### actualizar fch_update factura
@@ -563,6 +686,7 @@ def insertar_saleList(_respuesta, _conexion, _id_emp, _token):
                         with open(ruta_archivo, 'a') as archivo:
                             archivo.write("Error al Insertar facturas en la base de datos...") 
                 print("insertó detalle: ", valor_retorno_detalle)    
+                
                 if valor_retorno_detalle > 0: #se insertó el detalle, insertaré ahora los b64...
                     #ahora voy a insertar b64 de pdf y xml...
 
@@ -1305,8 +1429,6 @@ def manejar_grupo(id_grupo, tipos_lectura):
         time.sleep(segundos_hasta_el_proximo_intervalo)
         
         # Ahora ejecuta el proceso
-        #procesar_grupo_obtener_lecturas(id_grupo)
-        #envio la hora de ejecucion para que sea todo más cool
         #para ver en la hora que fue llamada una ejecución.-
         called_execution_time = hora_ejecucion.strftime('%H:%M:%S')
         
@@ -1329,9 +1451,9 @@ def calcular_periodo(resta_mes_periodo):
 
 
 def procesar_factura_venta(lectura, ruta_archivo, ID_LOG, hora_orquestado):
-#def procesar_factura_venta(lectura, ruta_archivo, ID_LOG):
+
     fch_actual = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-    #print ("Entre a procesar_factura_venta a las "+fch_actual)
+
 
     id_lectura = lectura['id_lectura']
    
@@ -1368,6 +1490,10 @@ def procesar_factura_venta(lectura, ruta_archivo, ID_LOG, hora_orquestado):
         try:
             fecha_actual = datetime.now().strftime("%d-%m-%Y %H:%M:%S.%f")
             #print ("Testeo")
+
+            ####
+            
+            
 
             OK_LECT_GENE = 0
             FAIL_LECT_GENE = 0
@@ -1476,9 +1602,9 @@ def procesar_factura_venta(lectura, ruta_archivo, ID_LOG, hora_orquestado):
 
 
                                 with open (ruta_archivo, 'a') as archivo:
-                                    archivo.write("{} | Página {} | {} | Filas Insertadas: {} | Filas Respuesta: {}  | Código Respuesta {} | {} \n".format(fecha_actual,numero_pagina_actual, nombre_empresa[0],facturas_insertadas,items_totales, cod_rpta, mensaje) )   
+                                    archivo.write("VENTAS {} | Página {} | {} | Filas Insertadas: {} | Filas Respuesta: {}  | Código Respuesta {} | {} \n".format(fecha_actual,numero_pagina_actual, nombre_empresa[0],facturas_insertadas,items_totales, cod_rpta, mensaje) )   
                                 contador += 1
-                                print("{} | Página {} | {} | Filas Insertadas: {} | Filas Respuesta: {}  | Código Respuesta {} | {} \n".format(fecha_actual, numero_pagina_actual, nombre_empresa[0],facturas_insertadas,items_totales, cod_rpta, mensaje) )   
+                                print("VENTAS {} | Página {} | {} | Filas Insertadas: {} | Filas Respuesta: {}  | Código Respuesta {} | {} \n".format(fecha_actual, numero_pagina_actual, nombre_empresa[0],facturas_insertadas,items_totales, cod_rpta, mensaje) )   
                             
 
                                 CANT_READ_DETA = items_totales
@@ -1768,9 +1894,8 @@ def insertar_purchaseList(_respuesta, _conexion, _id_emp, _token):
 
 
 def procesar_factura_compra(lectura, ruta_archivo, ID_LOG, hora_orquestado):
-        #def procesar_factura_venta(lectura, ruta_archivo, ID_LOG):
     fch_actual = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-    #print ("Entre a procesar_factura_venta a las "+fch_actual)
+   
 
     id_lectura = lectura['id_lectura']
    
@@ -2167,6 +2292,9 @@ def cargar_tipos_lectura(id_serv):
 
 def procesar_lectura(lectura, log_filename, ID_LOG, called_execution_time,tipos_lectura):
 
+#(lectura, log_filename, ID_LOG, called_execution_time,tipos_lectura):
+
+
     #tipo_lectura = lectura['endpoint']  # Asumiendo que 'endpoint' contiene la información de tipo de factura
     id_tipo_lectura = lectura['id_tipo_lect']
 
@@ -2198,9 +2326,12 @@ def procesar_lectura(lectura, log_filename, ID_LOG, called_execution_time,tipos_
        
             #if tipo_lectura == "facturas_ventas":    
             if id_tipo_lectura == 5: #en bd: nom_lect= FACTURAS VENTA & desc_lect = Obtener Facturas desde API Defontana
-                #procesar_factura_venta(lectura, ruta_archivo, ID_LOG)#print ()
+               
                 #print("id_tipo_lectura: "+str(id_tipo_lectura))
+                #este si funciona:
+                #procesar_factura_venta(lectura, ruta_archivo, ID_LOG, called_execution_time)
                 procesar_factura_venta(lectura, ruta_archivo, ID_LOG, called_execution_time)
+                
             
             #elif tipo_lectura == "get_caf": 
             elif id_tipo_lectura == 6:#en bd: nom_lect= CODIGO ASIGNACION DE FOLIOS FACTURAS & desc_lect = Obtener CAF desde API Defontana
@@ -2259,7 +2390,6 @@ def procesar_grupo_obtener_lecturas(id_grupo,called_execution_time,tipos_lectura
             # escribo en el log cada lectura que haré secuencial.
             escribir_archivo_log(id_grupo, lecturas_grupo_actual)
 
-
             FCH_LOG= datetime.now().strftime('%Y-%m-%d ') + called_execution_time
             #print("fch_log:" + str(FCH_LOG))
 
@@ -2268,9 +2398,23 @@ def procesar_grupo_obtener_lecturas(id_grupo,called_execution_time,tipos_lectura
             
             #print ("ID LOG: "+str(ID_LOG))
 
+            lecturas_auth_token = obtener_lecturas_auth_token(conexion)
+
+            '''for lectura_auth_token in lecturas_auth_token:
+                #print ("test num: "+str(lectura_auth_token))
+                #test3
+                obtener_insertar_token_auth_empresa(conexion,lectura_auth_token)
+'''
+
+
             # Proceso cada lectura y evaluo QUE ES
             for lectura in lecturas_grupo_actual:                
+                #este funciona:
                 procesar_lectura(lectura, log_filename, ID_LOG, called_execution_time,tipos_lectura)
+
+                
+
+
 
                 #procesar_lectura(lectura, log_filename, ID_LOG, called_execution_time)
                 #procesar_lectura(lectura, log_filename,called_execution_time)
@@ -2406,6 +2550,25 @@ def main():
         # Cuando busco los grupos iniciales, traer los grupos de lectura.
 
         tipos_lectura = cargar_tipos_lectura(ID_SERVICIO_GENE)  # Cargar los tipos de lectura
+
+        ###new code for update auth token.
+        lecturas_auth_token = obtener_lecturas_auth_token(conexion)
+
+        '''for lectura_auth_token in lecturas_auth_token:
+            #print ("test num: "+str(lectura_auth_token['client']))
+            #test3
+            obtener_insertar_token_auth_empresa(conexion,lectura_auth_token)'''
+        for lectura_auth_token in lecturas_auth_token:
+            try:
+                # Intenta obtener e insertar el token de autenticación para la empresa
+                obtener_insertar_token_auth_empresa(conexion, lectura_auth_token)
+            except Exception as e:
+                print(f"Error al actualizar token de autenticación para la empresa {lectura_auth_token['id_emp']}: {str(e)}")
+               
+                continue  # Salta al siguiente registro
+       
+        ###end code update auth token.
+
 
     except Exception as e:
         print(f"Error obteniendo grupos: {str(e)}")
