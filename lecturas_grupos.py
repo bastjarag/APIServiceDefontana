@@ -74,16 +74,21 @@ def adjust_key_length(key):
         return key.ljust(24, '\0')  # Rellenar con '\0' (null byte) si es menor
 
 def decrypt(enc_data, key):
-    key = adjust_key_length(key)
-    enc = b64decode(enc_data)
-    iv = enc[:AES.block_size]
-    ct = enc[AES.block_size:]
-    cipher = AES.new(key.encode(), AES.MODE_CBC, iv)
-    pt = unpad(cipher.decrypt(ct), AES.block_size)
-    return pt.decode('utf-8')
+    try:
+        key = adjust_key_length(key)
+        enc = b64decode(enc_data)
+        iv = enc[:AES.block_size]
+        ct = enc[AES.block_size:]
+        cipher = AES.new(key.encode(), AES.MODE_CBC, iv)
+        pt = unpad(cipher.decrypt(ct), AES.block_size)
+        return pt.decode('utf-8')
+    except Exception as e:
+        print(f"Error durante la desencriptación: {str(e)}")
+        return None
 
 # conexion a la base de datos con variables de entorno
-def conexion_base_datos(): 
+#old:
+'''def conexion_base_datos(): 
     decryption_key = 'oe2023'  # Reemplazar con tu clave real
 
     # Obtener y desencriptar las variables de entorno
@@ -93,11 +98,11 @@ def conexion_base_datos():
     password_enc = os.environ.get('apiservicedefontana_password')
     port_enc = os.environ.get('apiservicedefontana_port')
 
-    '''print(f"Encrypted database: {database_enc}")
+    print(f"Encrypted database: {database_enc}")
     print(f"Encrypted user: {user_enc}")
     print(f"Encrypted host: {host_enc}")
     print(f"Encrypted password: {password_enc}")
-    print(f"Encrypted port: {port_enc}")'''
+    print(f"Encrypted port: {port_enc}")
 
 
     if not all([database_enc, user_enc, host_enc, password_enc, port_enc]):
@@ -117,6 +122,28 @@ def conexion_base_datos():
         fecha_actual = datetime.now().strftime("%d-%m-%Y %H:%M:%S")#.strftime("%Y-%m-%d %H:%M:%S")
         with open(ruta_archivo, 'a') as archivo:
             archivo.write("FECHA: {} || Archivo: {} || Error de conexion BD: {}\n".format(fecha_actual, nombre_log, str(e)))#nombre_de_este_archivo, str(e)))
+'''
+
+
+
+def conexion_base_datos():
+    #database = "API_MOTOR" #bd de pruebas....
+    database = "OFINANCE"
+    user = "integrator"
+    #host = "172.28.0.1"
+    host ='192.168.151.33' #OLD: #'192.168.124.60' #con vpn
+    password = "aZwY=d@tA79"
+    port = 5432
+    
+
+    try:
+        conexion = psycopg2.connect(database=database, user=user, host=host, password=password, port=port)
+        #print(f"{datetime.now().strftime('%H:%M:%S %d/%m/%Y')} - Conexión a BD exitosa")
+        print(f"{datetime.now().strftime('%H:%M:%S.%f')[:-3]} {datetime.now().strftime('%d/%m/%Y')} - Conexión a BD exitosa")
+        return conexion
+    except Exception as e:
+        print(f"{datetime.now().strftime('%H:%M:%S.%f')[:-3]} {datetime.now().strftime('%d/%m/%Y')} - Error de conexión a BD: {str(e)}")
+        return None   
 
 #método para calcular la cantidad de páginas que se deben recorrer en obtener_respuesta       
 def calcular_total_paginas(total_items, items_por_pagina):
@@ -220,11 +247,20 @@ def obtener_respuesta(_url, _item_por_pagina, _numero_pagina, _token, resta_mes_
     url = _url.replace(":fch_inicio", fecha_inicio_str).replace(":fch_fin", fecha_fin_str).replace(":item_por_pagina", _item_por_pagina).replace(":numero_pagina", _numero_pagina)
 
     # Resto del código para realizar la solicitud HTTP...
-    payload = {}
+    #payload = {}
     headers = {
         'Authorization': 'Bearer {}'.format(_token)
     }
-    response = requests.request("GET", url, headers=headers, data=payload)
+    
+    #response = requests.request("GET", url, headers=headers, data=payload)
+    print(url)
+
+    try:
+        response = requests.request("GET", url, headers=headers)
+    except requests.exceptions.RequestException as e:  # Captura todos los errores de requests
+        print(e)
+        return None  # O maneja la excepción como prefieras
+
     
     return response
 

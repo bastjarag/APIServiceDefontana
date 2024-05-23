@@ -24,7 +24,7 @@ def encrypt(value, key):
 credentials = {
     'apiservicedefontana_database':"OFINANCE",
     'apiservicedefontana_user': "integrator",
-    'apiservicedefontana_host': '192.168.149.20',
+    'apiservicedefontana_host': "192.168.151.33",#IP Antigua bd#'192.168.149.20',
     'apiservicedefontana_password': "aZwY=d@tA79",
     'apiservicedefontana_port': '5432',  # Asumiendo que el puerto también debe ser encriptado
 }
